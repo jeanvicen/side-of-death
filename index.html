@@ -15,7 +15,6 @@
   }
   button{font-family:inherit;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, pointer;outline:none;border:0}
 
-  /* ============ PALCO ============ */
   #stage{position:fixed;inset:0;overflow:hidden;background:#050208}
   #stage.shaking{animation:shakeS .45s steps(8)}
   @keyframes shakeS{
@@ -62,7 +61,6 @@
     background:radial-gradient(ellipse at 50% 62%,rgba(255,0,40,.1),transparent 62%);animation:pulseA 3.4s ease-in-out infinite}
   @keyframes pulseA{0%,100%{opacity:.4}50%{opacity:1}}
 
-  /* ============ UI ============ */
   #menuUI{position:absolute;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;padding-top:7vh;pointer-events:none}
   #titleWrap{position:relative;text-align:center}
   #titleGlow{position:absolute;left:50%;top:50%;width:120%;height:220%;transform:translate(-50%,-50%);
@@ -129,7 +127,6 @@
   #stage:not(.in) #credits{opacity:0}
   #stage.in #credits{animation:rise .6s 2.05s backwards}
 
-  /* ============ INTRO KLIPZA ============ */
   #intro{position:fixed;inset:0;z-index:70;background:#030203;display:none;align-items:center;justify-content:center;flex-direction:column}
   #intro.show{display:flex}
   #intro.hide{animation:introFade .65s ease forwards}
@@ -152,7 +149,6 @@
   @keyframes apIn{to{opacity:1}}
   #skipHint{position:absolute;bottom:26px;font-size:8px;color:#4c453e;letter-spacing:.3em;animation:blink 1.4s steps(2) infinite}
 
-  /* ============ FLASH / SLASH ============ */
   #flash{position:fixed;inset:0;background:#ff1030;opacity:0;pointer-events:none;z-index:46}
   #flash.go{animation:flashA .5s ease-out}
   @keyframes flashA{0%{opacity:.5}100%{opacity:0}}
@@ -166,7 +162,6 @@
   #slashFx.go i:last-child{animation-delay:.1s}
   @keyframes slashMove{0%{transform:rotate(var(--rot)) translateX(-70%);opacity:0}15%{opacity:1}100%{transform:rotate(var(--rot)) translateX(62%);opacity:0}}
 
-  /* ============ OVERLAYS ============ */
   .overlay{position:fixed;inset:0;z-index:50;background:rgba(4,1,3,.82);display:none;align-items:center;justify-content:center}
   .overlay.show{display:flex}
   .panel{background:#0f0508;padding:36px 40px;max-width:92vw;text-align:center;animation:panelIn .18s steps(4);
@@ -186,7 +181,6 @@
   #soonOverlay .skull{image-rendering:pixelated;animation:skullBob 2s steps(2) infinite}
   @keyframes skullBob{0%,100%{translate:0 0}50%{translate:0 3px}}
 
-  /* ============ CRT ============ */
   #crt{position:fixed;inset:0;z-index:60;pointer-events:none;
     background:
       repeating-linear-gradient(0deg,rgba(0,0,0,.24) 0 1px,transparent 1px 3px),
@@ -309,36 +303,187 @@ const store={
 const SETTINGS=Object.assign({sfx:true,music:true,crt:true,blood:true},store.get('sod_settings',{}));
 const saveSettings=()=>store.set('sod_settings',SETTINGS);
 
-/* ================= ÁUDIO (ROCK PESADO) ================= */
-let AC=null,master,sfxBus,musicBus,guitarBus,noiseBuf;
-let musicTimer=null,stepIdx=0,nextNote=0;
-const BPM=142, SPB=60/BPM/4; /* colcheias de 16 */
-const NOTE={E2:82.41,Fs2:92.5,G2:98,A2:110,B2:123.47,C3:130.81,D3:146.83,E3:164.81,E4:329.63,G4:392,A4:440,B4:493.88,D5:587.33,E5:659.25};
+/* ==================================================================
+   ÁUDIO - ROCK PESADO (METAL/THRASH)
+   Guitarra distorcida com unison, palm mute, baixo distorcido,
+   bateria agressiva com double kick e fills.
+   ================================================================== */
+let AC=null,master,sfxBus,musicBus,guitarBus,bassBus,drumBus,reverbBus,noiseBuf;
+let musicTimer=null,stepIdx=0,nextNote=0,songPhase=0;
+
+const BPM=150;                // mais rápido, mais peso
+const SPB=60/BPM/4;           // 16th note
+
+const NOTE={
+  E1:41.20, A1:55.00, B1:61.74, C2:65.41, D2:73.42,
+  E2:82.41, Fs2:92.50, G2:98.00, Gs2:103.83, A2:110.00, B2:123.47, C3:130.81, D3:146.83, Eb3:155.56, E3:164.81, Fs3:185.00, G3:196.00, Gs3:207.65, A3:220.00, B3:246.94, C4:261.63, D4:293.66, E4:329.63, Fs4:369.99, G4:392.00, A4:440.00, B4:493.88,
+  C5:523.25, D5:587.33, E5:659.25, Fs5:739.99, G5:783.99, A5:880.00
+};
 const N=n=>NOTE[n];
-const GALLOP=[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1]; /* galope de metal */
-const BAR_ROOTS=[N('E2'),N('E2'),N('C3'),N('B2')]; /* riff: E5 E5 C5 B5 */
-const BAR_ROOTS2=[N('E2'),N('E2'),N('D3'),N('C3')]; /* variação 2ª metade */
+
+/* ---- Padrões de bateria (16 passos por compasso) ---- */
+/* K=kick, S=snare, H=hat fechado, O=hat aberto, D=double kick */
+const DRUM_PATTERNS = {
+  verse: [
+    // kick em 1 e 3, snare em 2 e 4, hat em todos os 8th
+    {steps:['KH','H','SH','H','KH','H','SH','H','KH','H','SH','H','KH','H','SH','OH']},
+  ],
+  heavy: [
+    // double kick gallop + snare backbeat
+    {steps:['KH','D','SH','D','KH','D','SH','D','KH','D','SH','D','KH','D','SH','OH']},
+  ],
+  fill: [
+    {steps:['S','S','SS','S','S','S','SSS','SS','K','K','K','K','K','K','K','KO']},
+  ]
+};
+
+/* ---- Riffs de guitarra (power chords com palm mute) ---- */
+/* p=palm mute (curto), c=chord cheio, s=squeal, r=rest, d=double */
+const GUIT_RIFFS = [
+  // Riff 1: E - C - B (clássico metal)
+  {notes:[
+    {n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:0}, // galope em E
+    {n:N('C3'),d:2,p:0},
+    {n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:1},
+    {n:N('B2'),d:2,p:0},
+  ]},
+  // Riff 2: E - G - A
+  {notes:[
+    {n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:0},
+    {n:N('G2'),d:2,p:0},
+    {n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:1},
+    {n:N('A2'),d:2,p:0},
+  ]},
+  // Riff 3: E - D - C - B (cromatismo descendente)
+  {notes:[
+    {n:N('E2'),d:2,p:0},
+    {n:N('D3'),d:2,p:0},
+    {n:N('C3'),d:2,p:0},
+    {n:N('B2'),d:2,p:0},
+  ]},
+  // Riff 4: E palm-mute gallop + squeal
+  {notes:[
+    {n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:0},
+    {n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:1},{n:N('E2'),d:1,p:0},
+    {n:N('E2'),d:2,p:0},{n:'squeal',d:2,p:0},
+  ]},
+  // Riff 5: breakdown lento - A - G - Eb - D
+  {notes:[
+    {n:N('A1'),d:4,p:0},
+    {n:N('G2'),d:4,p:0},
+    {n:N('Eb3'),d:4,p:0},
+    {n:N('D3'),d:4,p:0},
+  ]},
+];
+
+/* Sequência de compassos: 8 compassos por loop, 4 variações */
+const SONG_STRUCTURE = [
+  // Intro: riff 1 x4
+  0,0,0,0,
+  // Verse: riff 1, riff 2, riff 1, riff 3
+  0,1,0,2,
+  // Chorus: riff 2 x2, riff 4 x2
+  1,1,3,3,
+  // Breakdown: riff 5 x2 + fill
+  4,4,0,0,
+];
 
 function distCurve(amount){
-  const k=amount,n=1024,c=new Float32Array(n);
-  for(let i=0;i<n;i++){const x=i*2/n-1;c[i]=(3+k)*x*20*(Math.PI/180)/(Math.PI+k*Math.abs(x))}
+  const k=amount,n=2048,c=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    const x=i*2/n-1;
+    // Curva de distorção agressiva estilo tube screamer + mesa
+    c[i]=Math.tanh(x*k*0.8)*(1-Math.exp(-Math.abs(x)*12));
+  }
   return c;
 }
+
+function ampCab(input, bus, drive, tone){
+  // Simulador de amplificador + cabinet (guitarra)
+  const shaper=AC.createWaveShaper();
+  shaper.curve=distCurve(drive);
+  shaper.oversample='4x';
+  input.connect(shaper);
+
+  // High-pass antes da distorção (tira grave de guitarra, estilo real)
+  const preHP=AC.createBiquadFilter();
+  preHP.type='highpass';preHP.frequency.value=90;preHP.Q.value=0.6;
+  input.connect(preHP);preHP.connect(shaper);
+
+  // Low-pass depois da distorção (simula speaker cabinet ~ 4kHz)
+  const cab=AC.createBiquadFilter();
+  cab.type='lowpass';cab.frequency.value=tone;cab.Q.value=0.8;
+  shaper.connect(cab);
+
+  // Mid-boost (presença)
+  const mid=AC.createBiquadFilter();
+  mid.type='peaking';mid.frequency.value=1800;mid.Q.value=1.2;mid.gain.value=5;
+  cab.connect(mid);
+
+  // Leve "scoop" em 400Hz (tira caixa)
+  const scoop=AC.createBiquadFilter();
+  scoop.type='peaking';scoop.frequency.value=380;scoop.Q.value=1.4;scoop.gain.value=-4;
+  mid.connect(scoop);
+
+  scoop.connect(bus);
+  return scoop;
+}
+
 function initAudio(){
   if(AC){if(AC.state==='suspended')AC.resume();return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
-  master=AC.createGain();master.gain.value=.75;master.connect(AC.destination);
+
+  master=AC.createGain();master.gain.value=.8;master.connect(AC.destination);
+
   sfxBus=AC.createGain();sfxBus.connect(master);
   musicBus=AC.createGain();musicBus.gain.value=0;musicBus.connect(master);
-  /* guitarra distorcida */
-  guitarBus=AC.createGain();guitarBus.gain.value=.9;
-  const shaper=AC.createWaveShaper();shaper.curve=distCurve(70);shaper.oversample='4x';
-  const gFil=AC.createBiquadFilter();gFil.type='lowpass';gFil.frequency.value=2800;gFil.Q.value=.6;
-  guitarBus.connect(shaper);shaper.connect(gFil);gFil.connect(musicBus);
-  const len=AC.sampleRate;noiseBuf=AC.createBuffer(1,len,AC.sampleRate);
-  const ch=noiseBuf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=Math.random()*2-1;
+
+  // ---- BUS de GUITARRA (stereo + levemente distorcido) ----
+  guitarBus=AC.createGain();guitarBus.gain.value=0.95;
+  // Split L/R com leve delay (efeito de 2 amps)
+  const gL=AC.createGain(), gR=AC.createGain();
+  const gLPan=AC.createStereoPanner();gLPan.pan.value=-0.55;
+  const gRPan=AC.createStereoPanner();gRPan.pan.value=0.55;
+  const gDelay=AC.createDelay();gDelay.delayTime.value=0.011; // 11ms slapback
+  guitarBus.connect(gL);gL.connect(gLPan);
+  guitarBus.connect(gDelay);gDelay.connect(gR);gR.connect(gRPan);
+  ampCab(gLPan,musicBus,95,3400);
+  ampCab(gRPan,musicBus,95,3200);
+
+  // ---- BUS de BAIXO (oitava abaixo da guitarra, distorcido) ----
+  bassBus=AC.createGain();bassBus.gain.value=0.85;
+  const bassShaper=AC.createWaveShaper();bassShaper.curve=distCurve(40);bassShaper.oversample='4x';
+  const bassLP=AC.createBiquadFilter();bassLP.type='lowpass';bassLP.frequency.value=900;bassLP.Q.value=0.5;
+  const bassHP=AC.createBiquadFilter();bassHP.type='highpass';bassHP.frequency.value=50;bassHP.Q.value=0.5;
+  bassBus.connect(bassHP);bassHP.connect(bassShaper);bassShaper.connect(bassLP);bassLP.connect(musicBus);
+
+  // ---- BUS de BATERIA (com reverb de sala) ----
+  drumBus=AC.createGain();drumBus.gain.value=1.0;
+  drumBus.connect(musicBus);
+
+  // Reverb (convolução sintética curta)
+  reverbBus=AC.createGain();reverbBus.gain.value=0.12;
+  reverbBus.connect(musicBus);
+  const conv=AC.createConvolver();
+  const irLen=AC.sampleRate*1.2;
+  const ir=AC.createBuffer(2,irLen,AC.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const d=ir.getChannelData(ch);
+    for(let i=0;i<irLen;i++){
+      d[i]=(Math.random()*2-1)*Math.pow(1-i/irLen,2.5);
+    }
+  }
+  conv.buffer=ir;
+  drumBus.connect(conv);conv.connect(reverbBus);
+
+  // Noise buffer para pratos/caixa
+  const len=AC.sampleRate*2;
+  noiseBuf=AC.createBuffer(1,len,AC.sampleRate);
+  const ch=noiseBuf.getChannelData(0);
+  for(let i=0;i<len;i++)ch[i]=Math.random()*2-1;
 }
-/* --- SFX --- */
+
+/* ==================== SFX (mantidos) ==================== */
 function tone(f0,f1,dur,type,g,when,bus){
   if(!AC)return;bus=bus||sfxBus;const t=AC.currentTime+(when||0);
   const o=AC.createOscillator(),v=AC.createGain();
@@ -349,7 +494,7 @@ function tone(f0,f1,dur,type,g,when,bus){
 }
 function noiseHit(dur,g,freq,q,when,bus){
   if(!AC)return;bus=bus||sfxBus;const t=AC.currentTime+(when||0);
-  const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;
+  const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=false;
   const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q||1;
   const v=AC.createGain();v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.0001,t+dur);
   s.connect(f);f.connect(v);v.connect(bus);s.start(t);s.stop(t+dur+.05);
@@ -362,67 +507,235 @@ const SFX={
   slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.32,2400,1.2);tone(900,110,.22,'sawtooth',.15)},
   toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)}
 };
-/* --- BATERIA + GUITARRA --- */
-function kick(t,g){
-  g=g||1;
+
+/* ==================== BATERIA ==================== */
+function kick(t,vel){
+  vel=vel||1;
+  // Kick duplo: click + body
   const o=AC.createOscillator(),v=AC.createGain();
-  o.type='sine';o.frequency.setValueAtTime(155,t);o.frequency.exponentialRampToValueAtTime(44,t+.09);
-  v.gain.setValueAtTime(.85*g,t);v.gain.exponentialRampToValueAtTime(.001,t+.22);
-  o.connect(v);v.connect(musicBus);o.start(t);o.stop(t+.25);
-  noiseHit(.03,.2,3000,2,t,musicBus);
+  o.type='sine';
+  o.frequency.setValueAtTime(180,t);
+  o.frequency.exponentialRampToValueAtTime(38,t+.08);
+  v.gain.setValueAtTime(0.95*vel,t);
+  v.gain.exponentialRampToValueAtTime(.001,t+.28);
+  o.connect(v);v.connect(drumBus);o.start(t);o.stop(t+.3);
+
+  // Click do bumbo (pancada)
+  const o2=AC.createOscillator(),v2=AC.createGain();
+  o2.type='triangle';o2.frequency.setValueAtTime(2400,t);
+  o2.frequency.exponentialRampToValueAtTime(400,t+.02);
+  v2.gain.setValueAtTime(.3*vel,t);v2.gain.exponentialRampToValueAtTime(.001,t+.04);
+  o2.connect(v2);v2.connect(drumBus);o2.start(t);o2.stop(t+.06);
+
+  noiseHit(.03,.25,2800,2,t,drumBus);
 }
-function snare(t){
-  noiseHit(.16,.45,1900,.8,t,musicBus);
-  const o=AC.createOscillator(),v=AC.createGain();o.type='triangle';o.frequency.value=195;
-  v.gain.setValueAtTime(.28,t);v.gain.exponentialRampToValueAtTime(.001,t+.09);
-  o.connect(v);v.connect(musicBus);o.start(t);o.stop(t+.1);
+
+function snare(t,vel){
+  vel=vel||1;
+  // Noise da caixa (high-freq)
+  noiseHit(.18,.55,2200,0.9,t,drumBus);
+  // Tom do "crack"
+  const o=AC.createOscillator(),v=AC.createGain();
+  o.type='triangle';o.frequency.value=215;
+  v.gain.setValueAtTime(.32*vel,t);v.gain.exponentialRampToValueAtTime(.001,t+.1);
+  o.connect(v);v.connect(drumBus);o.start(t);o.stop(t+.12);
+  // Bottom end
+  noiseHit(.06,.18,400,1.2,t,drumBus);
 }
-function hat(t,open){noiseHit(open?.22:.045,open?.16:.11,8200,1.6,t,musicBus)}
-function crash(t){noiseHit(1.1,.26,6200,.5,t,musicBus)}
-function guitarChug(root,t,accent){
-  const fr=[root,root*1.4983,root*2]; /* tônica + 5ª + oitava = power chord */
-  for(let idx=0;idx<3;idx++){
-    const o=AC.createOscillator(),v=AC.createGain();
-    o.type='sawtooth';o.frequency.value=fr[idx];
-    const g=accent?(idx===0?.30:.19):(idx===0?.21:.13);
-    v.gain.setValueAtTime(.0001,t);
-    v.gain.linearRampToValueAtTime(g,t+.004);
-    v.gain.exponentialRampToValueAtTime(.0001,t+(accent?.30:.17));
-    o.connect(v);v.connect(guitarBus);o.start(t);o.stop(t+.36);
+
+function hat(t,open){
+  const dur=open?.24:.05;
+  noiseHit(dur,open?.2:.14,open?6500:9500,open?1.0:1.8,t,drumBus);
+}
+
+function crash(t){
+  noiseHit(1.4,.28,6000,0.5,t,drumBus);
+  noiseHit(.6,.14,12000,0.7,t,drumBus);
+}
+
+function ride(t){
+  noiseHit(.14,.09,8500,1.3,t,drumBus);
+}
+
+function tom(t,freq,dur){
+  const o=AC.createOscillator(),v=AC.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(freq*1.8,t);
+  o.frequency.exponentialRampToValueAtTime(freq,t+dur*0.4);
+  v.gain.setValueAtTime(.35,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(drumBus);o.start(t);o.stop(t+dur+.05);
+  noiseHit(dur*.6,.15,1800,1,t,drumBus);
+}
+
+/* ==================== GUITARRA ==================== */
+function guitarChug(root,t,dur,palm,accent){
+  // Power chord: root + 5ª + oitava (unison de 3 osc com detune para soar "real")
+  const intervals=[1, 1.4983, 2, 2.9966]; // root, 5ª, oitava, 12ª
+  const detunes=[-8, 0, 7, 14]; // cents de desafinação
+
+  for(let k=0;k<intervals.length;k++){
+    for(let v=-1;v<=1;v++){
+      const o=AC.createOscillator();
+      const g=AC.createGain();
+      o.type='sawtooth';
+      const baseFreq=root*intervals[k];
+      o.frequency.setValueAtTime(baseFreq*Math.pow(2,(detunes[k]+v*3)/1200),t);
+      // Leve "pitch drift" para soar orgânico
+      o.frequency.linearRampToValueAtTime(baseFreq*Math.pow(2,(detunes[k]+v*3+0.5)/1200),t+dur);
+
+      const peak=palm?0.18:0.32;
+      const peakAcc=accent?peak*1.25:peak;
+      g.gain.setValueAtTime(.0001,t);
+      g.gain.linearRampToValueAtTime(peakAcc,t+.003);
+      if(palm){
+        // Palm mute: corta abrupto
+        g.gain.setValueAtTime(peakAcc,t+dur*0.95);
+        g.gain.linearRampToValueAtTime(.0001,t+dur);
+      }else{
+        g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      }
+      o.connect(g);
+      // Stereo alternado
+      if((k+v)%2===0){
+        const pan=AC.createStereoPanner();pan.pan.value=-0.35;
+        g.connect(pan);pan.connect(guitarBus);
+      }else{
+        const pan=AC.createStereoPanner();pan.pan.value=0.35;
+        g.connect(pan);pan.connect(guitarBus);
+      }
+      o.start(t);o.stop(t+dur+.05);
+    }
+  }
+
+  // BAIXO segue a tônica uma oitava abaixo
+  const bassFreq=root/2;
+  const bo=AC.createOscillator(),bg=AC.createGain();
+  bo.type='sawtooth';bo.frequency.value=bassFreq;
+  const bpalm=palm?0.12:0.25;
+  bg.gain.setValueAtTime(.0001,t);
+  bg.gain.linearRampToValueAtTime(bpalm*(accent?1.2:1),t+.005);
+  if(palm){
+    bg.gain.setValueAtTime(bpalm,t+dur*0.9);
+    bg.gain.linearRampToValueAtTime(.0001,t+dur);
+  }else{
+    bg.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  }
+  bo.connect(bg);bg.connect(bassBus);bo.start(t);bo.stop(t+dur+.05);
+
+  // Sub-bass (fundamental mais puro)
+  const subo=AC.createOscillator(),subg=AC.createGain();
+  subo.type='sine';subo.frequency.value=bassFreq/2;
+  subg.gain.setValueAtTime(.0001,t);
+  subg.gain.linearRampToValueAtTime(palm?0.08:0.15,t+.01);
+  subg.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  subo.connect(subg);subg.connect(bassBus);subo.start(t);subo.stop(t+dur+.05);
+}
+
+function squeal(t,root){
+  // Pinch harmonic (squeal de guitarra)
+  const harmonics=[root*6, root*8, root*12];
+  const pick=harmonics[Math.floor(Math.random()*3)];
+  const o=AC.createOscillator(),v=AC.createGain();
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(pick*0.98,t);
+  o.frequency.exponentialRampToValueAtTime(pick*1.02,t+.1);
+  o.frequency.linearRampToValueAtTime(pick*.95,t+.6);
+  v.gain.setValueAtTime(.0001,t);
+  v.gain.linearRampToValueAtTime(.18,t+.01);
+  v.gain.exponentialRampToValueAtTime(.0001,t+.6);
+  o.connect(v);v.connect(guitarBus);o.start(t);o.stop(t+.65);
+
+  // Whammy bend
+  const o2=AC.createOscillator(),v2=AC.createGain();
+  o2.type='square';
+  o2.frequency.setValueAtTime(pick*2,t);
+  o2.frequency.exponentialRampToValueAtTime(pick*3,t+.4);
+  v2.gain.setValueAtTime(.0001,t+.05);
+  v2.gain.linearRampToValueAtTime(.06,t+.1);
+  v2.gain.exponentialRampToValueAtTime(.0001,t+.5);
+  o2.connect(v2);v2.connect(guitarBus);o2.start(t);o2.stop(t+.55);
+}
+
+/* ==================== SEQUENCIADOR ==================== */
+function playStep(i,t){
+  const stepInBar=i%16;
+  const bar=Math.floor(i/16);
+  const barInLoop=bar%SONG_STRUCTURE.length;
+  const riffIdx=SONG_STRUCTURE[barInLoop];
+  const riff=GUIT_RIFFS[riffIdx];
+
+  // Posiciona no riff
+  let acc=0,note=null;
+  for(let k=0;k<riff.notes.length;k++){
+    if(stepInBar>=acc && stepInBar<acc+riff.notes[k].d){
+      note=riff.notes[k];break;
+    }
+    acc+=riff.notes[k].d;
+  }
+
+  // GUITARRA + BAIXO
+  if(note){
+    if(note.n==='squeal'){
+      if(stepInBar===acc)squeal(t,NOTE.E2);
+    }else{
+      const noteDur=SPB*note.d*0.95;
+      const accent=(stepInBar===0||stepInBar===8);
+      if(stepInBar===acc){
+        guitarChug(note.n,t,noteDur,note.p,accent);
+      }
+    }
+  }
+
+  // BATERIA
+  const isFill=(bar%4===3 && stepInBar>=8);
+  const drumPat=isFill?DRUM_PATTERNS.fill[0]:
+                (riffIdx===4?DRUM_PATTERNS.heavy[0]:DRUM_PATTERNS.verse[0]);
+  const ds=drumPat.steps[stepInBar];
+  if(!ds)return;
+
+  for(const c of ds){
+    if(c==='K')kick(t);
+    else if(c==='D')kick(t,0.7);
+    else if(c==='S')snare(t);
+    else if(c==='H')hat(t,false);
+    else if(c==='O')hat(t,true);
+    else if(c==='R')ride(t);
+  }
+
+  // Crash em início de compasso e algumas variações
+  if(stepInBar===0 && bar%2===0)crash(t);
+  if(isFill && stepInBar===15){
+    tom(t,180,.2);tom(t+SPB,140,.2);tom(t+SPB*2,110,.3);
+  }
+  // Squeal aleatório em compassos "cheios"
+  if(riffIdx===3 && stepInBar===6 && Math.random()<0.4){
+    squeal(t+SPB,NOTE.E2);
   }
 }
-function squeal(t){
-  const o=AC.createOscillator(),v=AC.createGain();
-  o.type='sawtooth';o.frequency.setValueAtTime(1174,t);o.frequency.exponentialRampToValueAtTime(1760,t+.35);
-  v.gain.setValueAtTime(.10,t);v.gain.exponentialRampToValueAtTime(.001,t+.65);
-  o.connect(v);v.connect(guitarBus);o.start(t);o.stop(t+.7);
-}
-function playStep(i,t){
-  const step=i%16, bar=Math.floor(i/16)%8;
-  const root=(bar<4?BAR_ROOTS[bar]:BAR_ROOTS2[bar-4]);
-  if(GALLOP[step])guitarChug(root,t,step%4===0);
-  if(step%2===0)hat(t,bar===7&&step===14);
-  if(step===0||step===8)kick(t);
-  if(step===6||step===14)kick(t,.65);
-  if(step===4||step===12)snare(t);
-  if(step===0&&bar===0)crash(t);
-  if(i%128===112)squeal(t);
-}
+
 function startMusic(){
   if(!AC||musicTimer||!SETTINGS.music)return;
   musicBus.gain.cancelScheduledValues(AC.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value,AC.currentTime);
-  musicBus.gain.linearRampToValueAtTime(.5,AC.currentTime+1.6);
+  musicBus.gain.linearRampToValueAtTime(.75,AC.currentTime+1.2);
   stepIdx=0;nextNote=AC.currentTime+.12;
-  musicTimer=setInterval(()=>{while(nextNote<AC.currentTime+.35){playStep(stepIdx,nextNote);stepIdx++;nextNote+=SPB}},90);
+  musicTimer=setInterval(()=>{
+    while(nextNote<AC.currentTime+.35){
+      playStep(stepIdx,nextNote);
+      stepIdx++;
+      nextNote+=SPB;
+    }
+  },80);
 }
+
 function stopMusic(){
   if(!AC)return;
   if(musicTimer){clearInterval(musicTimer);musicTimer=null}
   musicBus.gain.cancelScheduledValues(AC.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value,AC.currentTime);
-  musicBus.gain.linearRampToValueAtTime(0,AC.currentTime+.5);
+  musicBus.gain.linearRampToValueAtTime(0,AC.currentTime+.4);
 }
+
 function applySettings(){
   if(AC)sfxBus.gain.value=SETTINGS.sfx?1:0;
   $('#crt').classList.toggle('off',!SETTINGS.crt);
@@ -541,7 +854,7 @@ function spawnDrop(xPct){
   });
 }
 
-/* ================= INTRO (SEMPRE TOCA) ================= */
+/* ================= INTRO ================= */
 const introEl=$('#intro');
 let introTimers=[],introDone=false;
 function runIntro(){
@@ -559,7 +872,7 @@ function endIntro(){
   if(introDone)return;introDone=true;
   introTimers.forEach(clearTimeout);introTimers=[];
   introEl.classList.add('hide');
-  gestureInit(); /* se o usuário clicou pra pular, já libera o som */
+  gestureInit();
   setTimeout(()=>{introEl.classList.remove('show');enterMenu()},650);
 }
 introEl.addEventListener('pointerdown',()=>{if(!introDone)endIntro()});
@@ -581,7 +894,7 @@ function enterMenu(){
   menuTimers.push(setTimeout(()=>{st.classList.add('shaking');flashRed();SFX.boom()},1080));
   menuTimers.push(setTimeout(()=>st.classList.remove('shaking'),1560));
   menuTimers.push(setTimeout(startDrips,1700));
-  menuTimers.push(setTimeout(()=>{if(SETTINGS.music)startMusic()},1200)); /* rock só no menu */
+  menuTimers.push(setTimeout(()=>{if(SETTINGS.music)startMusic()},1200));
 }
 setInterval(()=>{
   if(!menuActive)return;
@@ -640,7 +953,6 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-/* ================= BOOT: INTRO SEMPRE ================= */
 applySettings();
 runIntro();
 })();
