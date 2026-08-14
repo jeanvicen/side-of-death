@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIDE OF DEATH — KLIPZA STUDIO</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/press-start-2p@latest/index.css">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#000;overflow:hidden}
+  body{
+    font-family:'Press Start 2P','Courier New',monospace;
+    cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, crosshair;
+    touch-action:manipulation;
+  }
+  button{font-family:inherit;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, pointer;outline:none;border:0}
+
+  /* ============ PALCO ============ */
+  #stage{position:fixed;inset:0;overflow:hidden;background:#050208}
+  #stage.shaking{animation:shakeS .45s steps(8)}
+  @keyframes shakeS{
+    0%{transform:translate(0,0)}12%{transform:translate(-8px,5px)}25%{transform:translate(7px,-6px)}
+    38%{transform:translate(-6px,-4px)}50%{transform:translate(6px,5px)}62%{transform:translate(-4px,2px)}
+    75%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}
+  }
+
+  /* cenário */
+  #bgWrap{position:absolute;inset:-4%;z-index:1;will-change:transform}
+  #bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;filter:brightness(.9) saturate(1.08);opacity:0;transition:opacity 1.6s ease}
+  #bg.ready{opacity:1}
+
+  /* névoa */
+  .fog{position:absolute;left:0;right:0;pointer-events:none;z-index:2;filter:blur(3px)}
+  #fogA{bottom:-4%;height:34%;opacity:.16;
+    background-image:radial-gradient(closest-side,rgba(205,185,215,.6),transparent),radial-gradient(closest-side,rgba(190,170,205,.5),transparent),radial-gradient(closest-side,rgba(220,200,230,.45),transparent);
+    background-size:720px 200px,940px 240px,520px 160px;background-repeat:repeat-x;background-position:0 60%,120px 20%,300px 80%;
+    animation:fogMove 30s linear infinite}
+  #fogB{bottom:10%;height:30%;opacity:.09;
+    background-image:radial-gradient(closest-side,rgba(255,120,140,.5),transparent),radial-gradient(closest-side,rgba(200,180,215,.5),transparent);
+    background-size:860px 220px,640px 180px;background-repeat:repeat-x;background-position:0 50%,200px 30%;
+    animation:fogMove 44s linear infinite reverse}
+  @keyframes fogMove{from{background-position:0 60%,120px 20%,300px 80%}to{background-position:1440px 60%,-1760px 20%,1340px 80%}}
+
+  /* ceifador */
+  #reaperPar{position:absolute;inset:0;z-index:3;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;will-change:transform}
+  #reaperFloat{display:flex;flex-direction:column;align-items:center;margin-bottom:-2vh}
+  #stage:not(.in) #reaperFloat{opacity:0}
+  #stage.in #reaperFloat{animation:rRise 1.15s ease-out .15s backwards, rFloat 5s ease-in-out 1.7s infinite}
+  @keyframes rRise{from{opacity:0;translate:0 9vh}to{opacity:1;translate:0 0}}
+  @keyframes rFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  #reaper,#reaperFallback{display:none;height:min(80vh,760px);width:auto;image-rendering:pixelated}
+  #reaper.ready,#reaperFallback.ready{display:block;animation:aura 3.6s ease-in-out infinite}
+  #reaperFallback{mix-blend-mode:screen}
+  @keyframes aura{
+    0%,100%{filter:drop-shadow(0 0 16px rgba(255,15,40,.22)) drop-shadow(0 14px 24px rgba(0,0,0,.6))}
+    50%{filter:drop-shadow(0 0 36px rgba(255,15,40,.5)) drop-shadow(0 14px 24px rgba(0,0,0,.6))}
+  }
+  #reaperShadow{width:36vh;height:5vh;margin-top:-2vh;background:radial-gradient(ellipse,rgba(0,0,0,.65),transparent 70%);animation:shPulse 5s ease-in-out 1.7s infinite}
+  @keyframes shPulse{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.9)}}
+
+  #vignette{position:absolute;inset:0;z-index:4;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%,transparent 42%,rgba(0,0,0,.68) 100%),linear-gradient(to top,rgba(0,0,0,.55),transparent 24%)}
+  #fx{position:absolute;inset:0;z-index:5;pointer-events:none}
+  #pulse{position:absolute;inset:0;z-index:6;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 62%,rgba(255,0,40,.1),transparent 62%);animation:pulseA 3.4s ease-in-out infinite}
+  @keyframes pulseA{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ============ UI ============ */
+  #menuUI{position:absolute;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;padding-top:7vh;pointer-events:none}
+  #titleWrap{position:relative;text-align:center}
+  #titleGlow{position:absolute;left:50%;top:50%;width:120%;height:220%;transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse,rgba(255,10,40,.22),transparent 65%);pointer-events:none}
+  #stage:not(.in) #titleWrap{opacity:0}
+  #stage.in #titleWrap{animation:slam .5s cubic-bezier(.2,1.5,.35,1) .95s backwards}
+  @keyframes slam{
+    0%{opacity:0;transform:scale(3.1) translateY(-7vh)}
+    55%{opacity:1;transform:scale(.94) translateY(0)}
+    78%{transform:scale(1.05)}
+    100%{opacity:1;transform:scale(1)}
+  }
+  #titleLine1{position:relative;font-size:clamp(13px,2.6vw,26px);color:#efe8da;letter-spacing:.55em;padding-left:.55em;
+    text-shadow:0 0 14px rgba(255,30,50,.65),3px 3px 0 #000;margin-bottom:16px}
+  #titleLine2{position:relative;font-size:clamp(44px,10.5vw,106px);color:#ff1128;letter-spacing:.05em;
+    text-shadow:0 3px 0 #7a0012,0 6px 0 #40000a,0 9px 0 #170003,0 0 26px rgba(255,17,40,.55),0 0 80px rgba(255,17,40,.35)}
+  #titleWrap.glitch #titleLine2{animation:glitchA .14s steps(2) both}
+  @keyframes glitchA{
+    0%{transform:translate(-4px,2px);text-shadow:-4px 0 rgba(0,255,240,.7),4px 0 rgba(255,0,60,.8),0 6px 0 #40000a}
+    50%{transform:translate(3px,-2px) skewX(-3deg);text-shadow:4px 0 rgba(0,255,240,.7),-4px 0 rgba(255,0,60,.8)}
+    100%{transform:none}
+  }
+  #dripLayer{position:absolute;left:-6%;right:-6%;top:72%;height:130px;pointer-events:none}
+  .drip{position:absolute;top:0;width:var(--w,4px);background:linear-gradient(to bottom,rgba(122,0,18,.95),#d90429);
+    box-shadow:0 0 6px rgba(217,4,41,.5);animation:dripGrow var(--dur,1s) ease-in forwards}
+  .drip::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:calc(var(--w,4px) + 3px);height:5px;background:#ff1130;border-radius:0 0 4px 4px}
+  @keyframes dripGrow{from{height:0}to{height:var(--h,30px)}}
+  .drop{position:absolute;width:5px;height:9px;background:linear-gradient(#b00020,#ff1130);z-index:11;
+    animation:dropFall 1s cubic-bezier(.45,.05,.85,.45) forwards}
+  @keyframes dropFall{from{transform:translateY(0)}to{transform:translateY(var(--fall,400px));opacity:.85}}
+  .splat{position:absolute;width:14px;height:5px;background:#a3001e;z-index:10;animation:splatA .6s ease-out forwards}
+  @keyframes splatA{0%{transform:scale(.3);opacity:.9}100%{transform:scale(2.6,.9);opacity:0}}
+  body.noblood #dripLayer,body.noblood .drop,body.noblood .splat{display:none!important}
+
+  #menuButtons{display:flex;flex-direction:column;gap:22px;margin-top:clamp(46px,10vh,120px);pointer-events:auto}
+  .mbtn{
+    position:relative;font-size:clamp(12px,1.7vw,16px);letter-spacing:.2em;color:#e8e3d8;
+    background:#160a0d;padding:18px 54px;min-width:min(320px,82vw);
+    box-shadow:inset 0 0 0 3px #3d0c14,inset 0 0 0 6px #0a0405,0 6px 0 #000,0 0 22px rgba(255,20,40,.14);
+    transition:background .12s,box-shadow .12s,color .12s;
+  }
+  #stage:not(.in) .mbtn{opacity:0}
+  #stage.in .mbtn{animation:rise .45s cubic-bezier(.2,1.3,.4,1) backwards}
+  #stage.in #btnPlay{animation-delay:1.55s}
+  #stage.in #btnSettings{animation-delay:1.68s}
+  @keyframes rise{from{opacity:0;translate:0 28px}to{opacity:1;translate:0 0}}
+  .mbtn.focused,.mbtn:hover{
+    background:#3a0710;color:#fff;
+    box-shadow:inset 0 0 0 3px #ff2233,inset 0 0 0 6px #14060a,0 6px 0 #000,0 0 34px rgba(255,30,50,.5);
+  }
+  .mbtn.focused::before,.mbtn:hover::before{content:'▶';position:absolute;left:16px;top:50%;translate:0 -50%;color:#ff2233;animation:blink .8s steps(2) infinite}
+  .mbtn:active{translate:0 4px}
+  @keyframes blink{50%{opacity:0}}
+
+  #hint{margin-top:30px;font-size:8px;color:#6f675c;letter-spacing:.3em;text-align:center}
+  #stage:not(.in) #hint{opacity:0}
+  #stage.in #hint{animation:rise .5s 1.9s backwards}
+  @media (pointer:coarse){#hint{display:none}}
+
+  #credits{position:absolute;left:0;right:0;bottom:14px;z-index:12;text-align:center;pointer-events:none;
+    font-size:8px;color:#8a8177;letter-spacing:.18em;line-height:2}
+  #credits b{color:#c4bba9}
+  #credits .ver{color:#5c554c}
+  #stage:not(.in) #credits{opacity:0}
+  #stage.in #credits{animation:rise .6s 2.05s backwards}
+
+  /* ============ INTRO KLIPZA ============ */
+  #intro{position:fixed;inset:0;z-index:70;background:#030203;display:none;align-items:center;justify-content:center;flex-direction:column}
+  #intro.show{display:flex}
+  #intro.hide{animation:introFade .65s ease forwards}
+  @keyframes introFade{to{opacity:0}}
+  #introScythe{margin-bottom:26px;opacity:0;image-rendering:pixelated}
+  #intro.logo-on #introScythe{animation:apIn .8s steps(6) forwards}
+  #logoText{font-size:clamp(17px,4.6vw,42px);color:#f2ecdf;display:flex;letter-spacing:.08em}
+  #logoText span{opacity:0;display:inline-block;translate:0 14px}
+  #intro.logo-on #logoText span{animation:letterIn .45s steps(5) forwards;animation-delay:calc(var(--i)*.08s)}
+  @keyframes letterIn{
+    0%{opacity:0;translate:0 14px}
+    55%{opacity:1;translate:0 -3px;color:#ff2233;text-shadow:0 0 18px #ff0030}
+    100%{opacity:1;translate:0 0}
+  }
+  #logoBar{width:0;height:4px;background:#d90429;margin-top:20px;box-shadow:0 0 16px #ff0030}
+  #intro.logo-on #logoBar{animation:barGrow .8s .95s steps(12) forwards}
+  @keyframes barGrow{to{width:min(430px,72vw)}}
+  #apresenta{margin-top:28px;font-size:clamp(9px,1.8vw,14px);color:#8d8577;letter-spacing:.6em;padding-left:.6em;opacity:0}
+  #intro.ap-on #apresenta{animation:apIn 1s steps(6) forwards}
+  @keyframes apIn{to{opacity:1}}
+  #skipHint{position:absolute;bottom:26px;font-size:8px;color:#4c453e;letter-spacing:.3em;animation:blink 1.4s steps(2) infinite}
+
+  /* ============ FLASH / SLASH ============ */
+  #flash{position:fixed;inset:0;background:#ff1030;opacity:0;pointer-events:none;z-index:46}
+  #flash.go{animation:flashA .5s ease-out}
+  @keyframes flashA{0%{opacity:.5}100%{opacity:0}}
+  #slashFx{position:fixed;inset:0;z-index:48;pointer-events:none;overflow:hidden;display:none}
+  #slashFx.go{display:block}
+  #slashFx i{position:absolute;left:-30%;top:44%;width:160%;height:5px;--rot:-24deg;
+    background:linear-gradient(90deg,transparent,#fff 30%,#ff2233 50%,#fff 70%,transparent);
+    filter:drop-shadow(0 0 14px #ff2233);opacity:0;transform:rotate(var(--rot)) translateX(-70%)}
+  #slashFx i:last-child{--rot:-14deg;top:56%}
+  #slashFx.go i{animation:slashMove .34s cubic-bezier(.55,0,.45,1) forwards}
+  #slashFx.go i:last-child{animation-delay:.1s}
+  @keyframes slashMove{0%{transform:rotate(var(--rot)) translateX(-70%);opacity:0}15%{opacity:1}100%{transform:rotate(var(--rot)) translateX(62%);opacity:0}}
+
+  /* ============ OVERLAYS ============ */
+  .overlay{position:fixed;inset:0;z-index:50;background:rgba(4,1,3,.82);display:none;align-items:center;justify-content:center}
+  .overlay.show{display:flex}
+  .panel{background:#0f0508;padding:36px 40px;max-width:92vw;text-align:center;animation:panelIn .18s steps(4);
+    box-shadow:0 0 0 4px #000,0 0 0 8px #3d0c14,0 0 0 12px #000,0 0 70px rgba(255,10,40,.28)}
+  @keyframes panelIn{from{transform:scale(.9);opacity:0}}
+  .panelTitle{font-size:clamp(13px,2.4vw,18px);color:#ff1128;margin-bottom:24px;letter-spacing:.12em;
+    text-shadow:3px 3px 0 #300,0 0 18px rgba(255,17,40,.5)}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:26px;width:min(440px,78vw);margin:10px auto;
+    font-size:11px;color:#cfc7b8;background:#160a0e;padding:15px 18px;text-align:left;letter-spacing:.1em;
+    box-shadow:0 0 0 3px #2a0a12,0 4px 0 #000;transition:background .1s,box-shadow .1s}
+  .row:hover{background:#2a0a12;color:#fff;box-shadow:0 0 0 3px #ff2233,0 4px 0 #000}
+  .rv{color:#ff5b6a}
+  .rv.on{color:#7dff8a}
+  .row.action{justify-content:center;color:#ffd9de}
+  .row.close{justify-content:center;margin-top:22px;background:#2a0a12}
+  #soonOverlay p{font-size:10px;color:#b7ae9f;line-height:2.1;margin:18px 0 26px;letter-spacing:.08em}
+  #soonOverlay .skull{image-rendering:pixelated;animation:skullBob 2s steps(2) infinite}
+  @keyframes skullBob{0%,100%{translate:0 0}50%{translate:0 3px}}
+
+  /* ============ CRT ============ */
+  #crt{position:fixed;inset:0;z-index:60;pointer-events:none;
+    background:
+      repeating-linear-gradient(0deg,rgba(0,0,0,.24) 0 1px,transparent 1px 3px),
+      repeating-linear-gradient(90deg,rgba(255,0,60,.02) 0 1px,rgba(0,255,200,.015) 1px 2px,transparent 2px 3px),
+      radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.5) 100%);
+    animation:crtFlick 3.7s steps(40) infinite}
+  #crt::after{content:'';position:absolute;left:0;right:0;height:110px;top:-140px;
+    background:linear-gradient(transparent,rgba(255,255,255,.05),transparent);
+    animation:bandMove 7s linear infinite}
+  @keyframes bandMove{to{top:110%}}
+  @keyframes crtFlick{0%,100%{opacity:1}7%{opacity:.93}9%{opacity:1}46%{opacity:.96}48%{opacity:1}}
+  #crt.off{display:none}
+
+  @media (max-width:640px){
+    #reaper,#reaperFallback{height:58vh}
+    #menuButtons{margin-top:clamp(30px,6vh,70px)}
+    .mbtn{padding:16px 30px}
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="bgWrap"><img id="bg" alt="" draggable="false"></div>
+  <div class="fog" id="fogA"></div>
+  <div class="fog" id="fogB"></div>
+
+  <div id="reaperPar">
+    <div id="reaperFloat">
+      <canvas id="reaper"></canvas>
+      <img id="reaperFallback" alt="" draggable="false">
+      <div id="reaperShadow"></div>
+    </div>
+  </div>
+
+  <div id="vignette"></div>
+  <canvas id="fx"></canvas>
+  <div id="pulse"></div>
+
+  <div id="menuUI">
+    <div id="titleWrap">
+      <div id="titleGlow"></div>
+      <div id="titleLine1">SIDE OF</div>
+      <div id="titleLine2">DEATH</div>
+      <div id="dripLayer"></div>
+    </div>
+    <div id="menuButtons">
+      <button class="mbtn" id="btnPlay">PLAY</button>
+      <button class="mbtn" id="btnSettings">SETTINGS</button>
+    </div>
+    <div id="hint">↑ ↓ SELECIONAR &nbsp;·&nbsp; ENTER CONFIRMAR</div>
+  </div>
+
+  <div id="credits">
+    © 2026 <b>KLIPZA STUDIO</b> — TODOS OS DIREITOS RESERVADOS<br>
+    <span class="ver">SIDE OF DEATH v1.0 · FEITO COM SANGUE &amp; PIXELS</span>
+  </div>
+</div>
+
+<div id="flash"></div>
+<div id="slashFx"><i></i><i></i></div>
+
+<div id="settingsModal" class="overlay">
+  <div class="panel">
+    <div class="panelTitle">⚙ CONFIGURAÇÕES</div>
+    <button class="row" data-key="sfx"><span class="rl">SOM</span><span class="rv">ON</span></button>
+    <button class="row" data-key="music"><span class="rl">MÚSICA</span><span class="rv">ON</span></button>
+    <button class="row" data-key="crt"><span class="rl">EFEITO CRT</span><span class="rv">ON</span></button>
+    <button class="row" data-key="blood"><span class="rl">SANGUE</span><span class="rv">ON</span></button>
+    <button class="row action" id="btnReintro">▶ REVER INTRO DO ESTÚDIO</button>
+    <button class="row close" id="btnCloseSettings">FECHAR</button>
+  </div>
+</div>
+
+<div id="soonOverlay" class="overlay">
+  <div class="panel">
+    <svg class="skull" width="72" height="72" viewBox="0 0 12 12" shape-rendering="crispEdges">
+      <g fill="#e8e3d8">
+        <rect x="3" y="1" width="6" height="1"/><rect x="2" y="2" width="8" height="5"/>
+        <rect x="3" y="7" width="6" height="1"/><rect x="3" y="8" width="1" height="2"/>
+        <rect x="5" y="8" width="2" height="2"/><rect x="8" y="8" width="1" height="2"/>
+      </g>
+      <g fill="#12060a"><rect x="3" y="4" width="2" height="2"/><rect x="7" y="4" width="2" height="2"/><rect x="5" y="6" width="2" height="1"/></g>
+      <g fill="#ff1128"><rect x="3" y="4" width="1" height="1"/><rect x="8" y="4" width="1" height="1"/></g>
+    </svg>
+    <div class="panelTitle">EM BREVE</div>
+    <p>A Morte ainda está afiando a foice...<br>O CEMITÉRIO ABRIRÁ EM BREVE.</p>
+    <button class="row close" id="btnBackSoon" style="margin-top:0">VOLTAR</button>
+  </div>
+</div>
+
+<div id="intro">
+  <svg id="introScythe" width="64" height="64" viewBox="0 0 16 16" shape-rendering="crispEdges">
+    <g fill="#cfd4dd">
+      <rect x="4" y="1" width="4" height="1"/><rect x="3" y="2" width="2" height="1"/><rect x="8" y="2" width="2" height="1"/>
+      <rect x="10" y="3" width="2" height="1"/><rect x="11" y="4" width="2" height="1"/><rect x="12" y="5" width="1" height="2"/>
+    </g>
+    <g fill="#8f97a6"><rect x="12" y="7" width="1" height="2"/><rect x="2" y="2" width="1" height="1"/></g>
+    <g fill="#6b4a2f"><rect x="9" y="4" width="1" height="10"/></g>
+    <g fill="#4a3018"><rect x="8" y="13" width="1" height="2"/></g>
+    <rect x="9" y="3" width="1" height="1" fill="#ff1128"/>
+  </svg>
+  <div id="logoText"></div>
+  <div id="logoBar"></div>
+  <div id="apresenta">APRESENTA</div>
+  <div id="skipHint">CLIQUE PARA PULAR</div>
+</div>
+
+<div id="crt"></div>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const BG_URL='https://image.qwenlm.ai/public_source/0244c5a1-3cfe-4760-9420-c527aac322c9/1944c21fc-cf69-4e89-81e2-6cde71874816.png';
+const REAPER_URL='https://image.qwenlm.ai/public_source/0244c5a1-3cfe-4760-9420-c527aac322c9/1edf1d34f-4e9e-4018-9c0e-270d37961d06.png';
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const SETTINGS=Object.assign({sfx:true,music:true,crt:true,blood:true},store.get('sod_settings',{}));
+const saveSettings=()=>store.set('sod_settings',SETTINGS);
+
+/* ================= ÁUDIO ================= */
+let AC=null,master,sfxBus,musicBus,delaySend,noiseBuf,musicTimer=null,stepIdx=0,nextNote=0;
+const SPB=60/66/2;
+const NOTE={E2:82.41,Fs2:92.5,G2:98,A2:110,B2:123.47,E3:164.81,E4:329.63,G4:392,A4:440,B4:493.88,D5:587.33,E5:659.25};
+const N=n=>NOTE[n];
+const ARP=[N('E4'),0,N('G4'),0,N('B4'),0,N('E5'),0,N('D5'),0,N('B4'),0,N('G4'),0,N('B4'),N('D5')];
+const BASS=[N('E2'),N('E2'),N('G2'),N('Fs2')];
+function initAudio(){
+  if(AC){if(AC.state==='suspended')AC.resume();return}
+  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
+  master=AC.createGain();master.gain.value=.7;master.connect(AC.destination);
+  sfxBus=AC.createGain();sfxBus.connect(master);
+  musicBus=AC.createGain();musicBus.gain.value=0;musicBus.connect(master);
+  const dl=AC.createDelay(1);dl.delayTime.value=.36;
+  const fb=AC.createGain();fb.gain.value=.34;dl.connect(fb);fb.connect(dl);
+  delaySend=AC.createGain();delaySend.gain.value=.5;delaySend.connect(dl);dl.connect(musicBus);
+  const len=AC.sampleRate;noiseBuf=AC.createBuffer(1,len,AC.sampleRate);
+  const ch=noiseBuf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=Math.random()*2-1;
+}
+function tone(f0,f1,dur,type,g,when,bus){
+  if(!AC)return;bus=bus||sfxBus;const t=AC.currentTime+(when||0);
+  const o=AC.createOscillator(),v=AC.createGain();
+  o.type=type;o.frequency.setValueAtTime(f0,t);
+  if(f1&&f1!==f0)o.frequency.exponentialRampToValueAtTime(Math.max(f1,1),t+dur);
+  v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+.008);v.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(v);v.connect(bus);o.start(t);o.stop(t+dur+.05);
+}
+function noiseHit(dur,g,freq,q,when){
+  if(!AC)return;const t=AC.currentTime+(when||0);
+  const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;
+  const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q||1;
+  const v=AC.createGain();v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f);f.connect(v);v.connect(sfxBus);s.start(t);s.stop(t+dur+.05);
+}
+const SFX={
+  hover(){if(SETTINGS.sfx)tone(540,540,.045,'square',.05)},
+  ok(){if(!SETTINGS.sfx)return;tone(660,660,.07,'square',.09);tone(990,990,.1,'square',.09,.07)},
+  back(){if(SETTINGS.sfx)tone(320,170,.14,'square',.09)},
+  boom(){if(!SETTINGS.sfx)return;tone(130,38,.5,'sine',.5);noiseHit(.3,.25,200,.8)},
+  slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.3,2400,1.2);tone(900,110,.22,'sawtooth',.14)},
+  toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)}
+};
+function playStep(i,t){
+  if(i%4===0){
+    const o=AC.createOscillator(),v=AC.createGain(),fl=AC.createBiquadFilter();
+    o.type='sawtooth';o.frequency.value=BASS[Math.floor(i/4)%4];
+    fl.type='lowpass';fl.frequency.value=180;fl.Q.value=4;
+    v.gain.setValueAtTime(.0001,t);v.gain.linearRampToValueAtTime(.32,t+.02);v.gain.exponentialRampToValueAtTime(.0001,t+SPB*3.6);
+    o.connect(fl);fl.connect(v);v.connect(musicBus);o.start(t);o.stop(t+SPB*4);
+  }
+  const a=ARP[i%ARP.length];
+  if(a){
+    const o=AC.createOscillator(),v=AC.createGain();
+    o.type='triangle';o.frequency.value=a;
+    v.gain.setValueAtTime(.0001,t);v.gain.linearRampToValueAtTime(.15,t+.012);v.gain.exponentialRampToValueAtTime(.0001,t+.34);
+    o.connect(v);v.connect(musicBus);v.connect(delaySend);o.start(t);o.stop(t+.5);
+  }
+  if(i%32===16){
+    const o=AC.createOscillator(),v=AC.createGain();
+    o.type='sine';o.frequency.value=NOTE.E5;
+    v.gain.setValueAtTime(.0001,t);v.gain.linearRampToValueAtTime(.05,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+2.8);
+    o.connect(v);v.connect(musicBus);v.connect(delaySend);o.start(t);o.stop(t+3);
+  }
+}
+function startMusic(){
+  if(!AC||musicTimer)return;
+  musicBus.gain.cancelScheduledValues(AC.currentTime);
+  musicBus.gain.setValueAtTime(musicBus.gain.value,AC.currentTime);
+  musicBus.gain.linearRampToValueAtTime(.45,AC.currentTime+2.5);
+  stepIdx=0;nextNote=AC.currentTime+.15;
+  musicTimer=setInterval(()=>{while(nextNote<AC.currentTime+.35){playStep(stepIdx,nextNote);stepIdx++;nextNote+=SPB}},120);
+}
+function stopMusic(){
+  if(!AC)return;
+  if(musicTimer){clearInterval(musicTimer);musicTimer=null}
+  musicBus.gain.cancelScheduledValues(AC.currentTime);
+  musicBus.gain.setValueAtTime(musicBus.gain.value,AC.currentTime);
+  musicBus.gain.linearRampToValueAtTime(0,AC.currentTime+.6);
+}
+function applyAudioSettings(){
+  if(AC){sfxBus.gain.value=SETTINGS.sfx?1:0;if(SETTINGS.music)startMusic();else stopMusic()}
+  $('#crt').classList.toggle('off',!SETTINGS.crt);
+  document.body.classList.toggle('noblood',!SETTINGS.blood);
+}
+let audioReady=false;
+function gestureInit(){
+  if(audioReady){if(AC&&AC.state==='suspended')AC.resume();return}
+  audioReady=true;initAudio();applyAudioSettings();
+}
+document.addEventListener('pointerdown',gestureInit);
+document.addEventListener('keydown',gestureInit);
+
+/* ================= CENÁRIO / CEIFADOR ================= */
+const bg=$('#bg');bg.src=BG_URL;
+const markBg=()=>bg.classList.add('ready');
+if(bg.complete&&bg.naturalWidth)markBg();else bg.onload=markBg;
+
+function keyOut(img,th,soft){
+  const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+  const x=c.getContext('2d');x.drawImage(img,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  for(let i=0;i<p.length;i+=4){
+    const lum=Math.max(p[i],p[i+1],p[i+2]);
+    if(lum<th)p[i+3]=0;
+    else if(lum<th+soft)p[i+3]=Math.round(p[i+3]*((lum-th)/soft));
+  }
+  x.putImageData(d,0,0);return c;
+}
+const rImg=new Image();rImg.crossOrigin='anonymous';rImg.src=REAPER_URL;
+rImg.onload=()=>{
+  try{
+    const kc=keyOut(rImg,18,55);
+    const c=$('#reaper');c.width=kc.width;c.height=kc.height;
+    c.getContext('2d').drawImage(kc,0,0);c.classList.add('ready');
+  }catch(e){$('#reaperFallback').src=REAPER_URL;$('#reaperFallback').classList.add('ready')}
+};
+rImg.onerror=()=>{$('#reaperFallback').src=REAPER_URL;$('#reaperFallback').classList.add('ready')};
+
+/* ================= PARTÍCULAS + PARALLAX ================= */
+const fx=$('#fx'),fxc=fx.getContext('2d');
+let W=0,H=0,parts=[];
+function resizeFx(){
+  W=fx.width=innerWidth;H=fx.height=innerHeight;parts=[];
+  const n=Math.min(70,Math.floor(W*H/22000));
+  const cols=['#ff3040','#ff7028','#ffb060'];
+  for(let i=0;i<n;i++){
+    if(i<n*.65)parts.push({t:'e',x:Math.random()*W,y:Math.random()*H,s:1+Math.floor(Math.random()*3),
+      v:.15+Math.random()*.35,sp:.001+Math.random()*.002,fl:.003+Math.random()*.004,ph:Math.random()*7,c:cols[i%3]});
+    else parts.push({t:'a',x:Math.random()*W,y:Math.random()*H,v:.1+Math.random()*.25,ph:Math.random()*7});
+  }
+}
+addEventListener('resize',resizeFx);resizeFx();
+let mx=0,my=0,cx=0,cy=0;
+addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+const bgWrap=$('#bgWrap'),reaperPar=$('#reaperPar');
+let last=performance.now();
+function tick(now){
+  requestAnimationFrame(tick);
+  const dt=Math.min(33,now-last)/16.6;last=now;
+  cx+=(mx-cx)*.05*dt;cy+=(my-cy)*.05*dt;
+  bgWrap.style.transform='translate3d('+(cx*-20)+'px,'+(cy*-12)+'px,0)';
+  reaperPar.style.transform='translate3d('+(cx*12)+'px,'+(cy*7)+'px,0)';
+  fxc.clearRect(0,0,W,H);
+  for(const p of parts){
+    if(p.t==='e'){
+      p.y-=p.v*dt;p.x+=Math.sin(now*p.sp+p.ph)*.35*dt;
+      if(p.y<-8){p.y=H+8;p.x=Math.random()*W}
+      fxc.globalAlpha=.22+.45*Math.abs(Math.sin(now*p.fl+p.ph));
+      fxc.fillStyle=p.c;fxc.fillRect(p.x|0,p.y|0,p.s,p.s);
+    }else{
+      p.y+=p.v*dt;p.x+=Math.sin(now*.0006+p.ph)*.2*dt;
+      if(p.y>H+8){p.y=-8;p.x=Math.random()*W}
+      fxc.globalAlpha=.07+.08*Math.abs(Math.sin(now*.001+p.ph));
+      fxc.fillStyle='#cfc8d8';fxc.fillRect(p.x|0,p.y|0,2,2);
+    }
+  }
+  fxc.globalAlpha=1;
+}
+requestAnimationFrame(tick);
+
+/* ================= SANGUE (DRIPS) ================= */
+const dripLayer=$('#dripLayer'),stage=$('#stage');
+let dripTimer=null,activeDrips=0;
+function startDrips(){stopDrips();dripTimer=setInterval(()=>{if(!SETTINGS.blood||!menuActive)return;if(activeDrips>9)return;spawnDrip()},340)}
+function stopDrips(){if(dripTimer){clearInterval(dripTimer);dripTimer=null}}
+function spawnDrip(){
+  activeDrips++;
+  const d=document.createElement('div');d.className='drip';
+  const xPct=4+Math.random()*92;
+  d.style.left=xPct+'%';
+  const dur=.7+Math.random()*.8;
+  d.style.setProperty('--dur',dur+'s');
+  d.style.setProperty('--h',(12+Math.random()*46)+'px');
+  d.style.setProperty('--w',(3+Math.floor(Math.random()*2))+'px');
+  dripLayer.appendChild(d);
+  setTimeout(()=>{spawnDrop(xPct);d.remove();activeDrips--},dur*1000+60);
+}
+function spawnDrop(xPct){
+  if(!SETTINGS.blood)return;
+  const r=dripLayer.getBoundingClientRect();
+  const left=r.left+(xPct/100)*r.width;
+  const top=r.bottom-6-Math.random()*18;
+  const dr=document.createElement('div');dr.className='drop';
+  dr.style.left=left+'px';dr.style.top=top+'px';
+  const fall=Math.max(60,innerHeight-top-14);
+  dr.style.setProperty('--fall',fall+'px');
+  dr.style.animationDuration=(.85+Math.random()*.5)+'s';
+  stage.appendChild(dr);
+  dr.addEventListener('animationend',()=>{
+    const s=document.createElement('div');s.className='splat';
+    s.style.left=(left-5)+'px';s.style.top=(top+fall)+'px';
+    stage.appendChild(s);setTimeout(()=>s.remove(),650);
+    dr.remove();
+  });
+}
+
+/* ================= INTRO ================= */
+const introEl=$('#intro');
+let introTimers=[],introDone=false;
+function runIntro(){
+  introEl.classList.remove('hide','logo-on','ap-on');
+  introEl.classList.add('show');
+  const txt='KLIPZA STUDIO';
+  $('#logoText').innerHTML=[...txt].map((c,i)=>'<span style="--i:'+i+'">'+(c===' '?'&nbsp;':c)+'</span>').join('');
+  introTimers=[];
+  const t1=650,t2=t1+txt.length*80+650;
+  introTimers.push(setTimeout(()=>introEl.classList.add('logo-on'),t1));
+  introTimers.push(setTimeout(()=>introEl.classList.add('ap-on'),t2));
+  introTimers.push(setTimeout(endIntro,t2+2200));
+}
+function endIntro(){
+  if(introDone)return;introDone=true;
+  introTimers.forEach(clearTimeout);introTimers=[];
+  introEl.classList.add('hide');
+  setTimeout(()=>{introEl.classList.remove('show');store.set('klipza_seen',1);enterMenu()},650);
+}
+introEl.addEventListener('pointerdown',()=>{if(!introDone)endIntro()});
+
+/* ================= MENU ================= */
+let menuActive=false,focused=0,menuTimers=[],playing=false;
+const btnList=()=>[$('#btnPlay'),$('#btnSettings')];
+function setFocus(i){focused=i;btnList().forEach((b,j)=>b.classList.toggle('focused',j===i))}
+function flashRed(){const f=$('#flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+function enterMenu(){
+  menuTimers.forEach(clearTimeout);menuTimers=[];
+  const st=$('#stage');
+  st.classList.remove('in','shaking');
+  dripLayer.innerHTML='';
+  stage.querySelectorAll('.drop,.splat').forEach(e=>e.remove());
+  void st.offsetWidth;
+  menuActive=true;setFocus(0);
+  st.classList.add('in');
+  menuTimers.push(setTimeout(()=>{st.classList.add('shaking');flashRed();SFX.boom()},1080));
+  menuTimers.push(setTimeout(()=>st.classList.remove('shaking'),1560));
+  menuTimers.push(setTimeout(startDrips,1700));
+}
+setInterval(()=>{
+  if(!menuActive)return;
+  const t=$('#titleWrap');t.classList.add('glitch');
+  setTimeout(()=>t.classList.remove('glitch'),150);
+},3800);
+
+/* ================= AÇÕES ================= */
+function playSequence(){
+  if(playing)return;playing=true;menuActive=false;
+  $('#slashFx').classList.add('go');SFX.slash();flashRed();
+  stage.classList.add('shaking');
+  setTimeout(()=>stage.classList.remove('shaking'),460);
+  setTimeout(()=>{$('#slashFx').classList.remove('go');$('#soonOverlay').classList.add('show');playing=false},840);
+}
+function closeSoon(){$('#soonOverlay').classList.remove('show');menuActive=true;setFocus(0)}
+function openSettings(){$('#settingsModal').classList.add('show');refreshRows()}
+function closeSettings(){$('#settingsModal').classList.remove('show')}
+function refreshRows(){
+  document.querySelectorAll('.row[data-key]').forEach(r=>{
+    const v=r.querySelector('.rv');v.textContent=SETTINGS[r.dataset.key]?'ON':'OFF';
+    v.classList.toggle('on',SETTINGS[r.dataset.key]);
+  });
+}
+$('#btnPlay').addEventListener('click',e=>{e.currentTarget.blur();SFX.ok();playSequence()});
+$('#btnSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.ok();openSettings()});
+$('#btnCloseSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.back();closeSettings()});
+$('#btnBackSoon').addEventListener('click',e=>{e.currentTarget.blur();SFX.back();closeSoon()});
+$('#btnReintro').addEventListener('click',e=>{
+  e.currentTarget.blur();SFX.ok();closeSettings();
+  menuActive=false;stopDrips();
+  stage.classList.remove('in','shaking');
+  introDone=false;runIntro();
+});
+document.querySelectorAll('.row[data-key]').forEach(r=>{
+  r.addEventListener('mouseenter',()=>SFX.hover());
+  r.addEventListener('click',()=>{
+    const k=r.dataset.key;SETTINGS[k]=!SETTINGS[k];saveSettings();applyAudioSettings();SFX.toggle();refreshRows();
+  });
+});
+btnList().forEach(b=>b.addEventListener('mouseenter',()=>{SFX.hover()}));
+
+/* ================= TECLADO ================= */
+document.addEventListener('keydown',e=>{
+  if(introEl.classList.contains('show')&&!introDone){endIntro();return}
+  if($('#settingsModal').classList.contains('show')){if(e.key==='Escape')closeSettings();return}
+  if($('#soonOverlay').classList.contains('show')){if(e.key==='Enter'||e.key==='Escape')closeSoon();return}
+  if(!menuActive)return;
+  const n=btnList().length;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'||e.key==='s'||e.key==='w'){
+    setFocus((focused+((e.key==='ArrowDown'||e.key==='s')?1:n-1))%n);SFX.hover();e.preventDefault();
+  }else if(e.key==='Enter'||e.key===' '){
+    btnList()[focused].click();e.preventDefault();
+  }
+});
+
+/* ================= BOOT ================= */
+applyAudioSettings();
+if(store.get('klipza_seen',0))enterMenu();else runIntro();
+})();
+</script>
+</body>
+</html>
