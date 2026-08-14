@@ -24,12 +24,10 @@
     75%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}
   }
 
-  /* cenário */
   #bgWrap{position:absolute;inset:-4%;z-index:1;will-change:transform}
   #bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;filter:brightness(.9) saturate(1.08);opacity:0;transition:opacity 1.6s ease}
   #bg.ready{opacity:1}
 
-  /* névoa */
   .fog{position:absolute;left:0;right:0;pointer-events:none;z-index:2;filter:blur(3px)}
   #fogA{bottom:-4%;height:34%;opacity:.16;
     background-image:radial-gradient(closest-side,rgba(205,185,215,.6),transparent),radial-gradient(closest-side,rgba(190,170,205,.5),transparent),radial-gradient(closest-side,rgba(220,200,230,.45),transparent);
@@ -41,7 +39,6 @@
     animation:fogMove 44s linear infinite reverse}
   @keyframes fogMove{from{background-position:0 60%,120px 20%,300px 80%}to{background-position:1440px 60%,-1760px 20%,1340px 80%}}
 
-  /* ceifador */
   #reaperPar{position:absolute;inset:0;z-index:3;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;will-change:transform}
   #reaperFloat{display:flex;flex-direction:column;align-items:center;margin-bottom:-2vh}
   #stage:not(.in) #reaperFloat{opacity:0}
@@ -312,25 +309,36 @@ const store={
 const SETTINGS=Object.assign({sfx:true,music:true,crt:true,blood:true},store.get('sod_settings',{}));
 const saveSettings=()=>store.set('sod_settings',SETTINGS);
 
-/* ================= ÁUDIO ================= */
-let AC=null,master,sfxBus,musicBus,delaySend,noiseBuf,musicTimer=null,stepIdx=0,nextNote=0;
-const SPB=60/66/2;
-const NOTE={E2:82.41,Fs2:92.5,G2:98,A2:110,B2:123.47,E3:164.81,E4:329.63,G4:392,A4:440,B4:493.88,D5:587.33,E5:659.25};
+/* ================= ÁUDIO (ROCK PESADO) ================= */
+let AC=null,master,sfxBus,musicBus,guitarBus,noiseBuf;
+let musicTimer=null,stepIdx=0,nextNote=0;
+const BPM=142, SPB=60/BPM/4; /* colcheias de 16 */
+const NOTE={E2:82.41,Fs2:92.5,G2:98,A2:110,B2:123.47,C3:130.81,D3:146.83,E3:164.81,E4:329.63,G4:392,A4:440,B4:493.88,D5:587.33,E5:659.25};
 const N=n=>NOTE[n];
-const ARP=[N('E4'),0,N('G4'),0,N('B4'),0,N('E5'),0,N('D5'),0,N('B4'),0,N('G4'),0,N('B4'),N('D5')];
-const BASS=[N('E2'),N('E2'),N('G2'),N('Fs2')];
+const GALLOP=[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1]; /* galope de metal */
+const BAR_ROOTS=[N('E2'),N('E2'),N('C3'),N('B2')]; /* riff: E5 E5 C5 B5 */
+const BAR_ROOTS2=[N('E2'),N('E2'),N('D3'),N('C3')]; /* variação 2ª metade */
+
+function distCurve(amount){
+  const k=amount,n=1024,c=new Float32Array(n);
+  for(let i=0;i<n;i++){const x=i*2/n-1;c[i]=(3+k)*x*20*(Math.PI/180)/(Math.PI+k*Math.abs(x))}
+  return c;
+}
 function initAudio(){
   if(AC){if(AC.state==='suspended')AC.resume();return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
-  master=AC.createGain();master.gain.value=.7;master.connect(AC.destination);
+  master=AC.createGain();master.gain.value=.75;master.connect(AC.destination);
   sfxBus=AC.createGain();sfxBus.connect(master);
   musicBus=AC.createGain();musicBus.gain.value=0;musicBus.connect(master);
-  const dl=AC.createDelay(1);dl.delayTime.value=.36;
-  const fb=AC.createGain();fb.gain.value=.34;dl.connect(fb);fb.connect(dl);
-  delaySend=AC.createGain();delaySend.gain.value=.5;delaySend.connect(dl);dl.connect(musicBus);
+  /* guitarra distorcida */
+  guitarBus=AC.createGain();guitarBus.gain.value=.9;
+  const shaper=AC.createWaveShaper();shaper.curve=distCurve(70);shaper.oversample='4x';
+  const gFil=AC.createBiquadFilter();gFil.type='lowpass';gFil.frequency.value=2800;gFil.Q.value=.6;
+  guitarBus.connect(shaper);shaper.connect(gFil);gFil.connect(musicBus);
   const len=AC.sampleRate;noiseBuf=AC.createBuffer(1,len,AC.sampleRate);
   const ch=noiseBuf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=Math.random()*2-1;
 }
+/* --- SFX --- */
 function tone(f0,f1,dur,type,g,when,bus){
   if(!AC)return;bus=bus||sfxBus;const t=AC.currentTime+(when||0);
   const o=AC.createOscillator(),v=AC.createGain();
@@ -339,67 +347,92 @@ function tone(f0,f1,dur,type,g,when,bus){
   v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+.008);v.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(v);v.connect(bus);o.start(t);o.stop(t+dur+.05);
 }
-function noiseHit(dur,g,freq,q,when){
-  if(!AC)return;const t=AC.currentTime+(when||0);
+function noiseHit(dur,g,freq,q,when,bus){
+  if(!AC)return;bus=bus||sfxBus;const t=AC.currentTime+(when||0);
   const s=AC.createBufferSource();s.buffer=noiseBuf;s.loop=true;
   const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q||1;
   const v=AC.createGain();v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  s.connect(f);f.connect(v);v.connect(sfxBus);s.start(t);s.stop(t+dur+.05);
+  s.connect(f);f.connect(v);v.connect(bus);s.start(t);s.stop(t+dur+.05);
 }
 const SFX={
   hover(){if(SETTINGS.sfx)tone(540,540,.045,'square',.05)},
   ok(){if(!SETTINGS.sfx)return;tone(660,660,.07,'square',.09);tone(990,990,.1,'square',.09,.07)},
   back(){if(SETTINGS.sfx)tone(320,170,.14,'square',.09)},
-  boom(){if(!SETTINGS.sfx)return;tone(130,38,.5,'sine',.5);noiseHit(.3,.25,200,.8)},
-  slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.3,2400,1.2);tone(900,110,.22,'sawtooth',.14)},
+  boom(){if(!SETTINGS.sfx)return;tone(130,36,.55,'sine',.55);noiseHit(.35,.3,220,.8);tone(82,40,.4,'sawtooth',.2,.02)},
+  slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.32,2400,1.2);tone(900,110,.22,'sawtooth',.15)},
   toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)}
 };
-function playStep(i,t){
-  if(i%4===0){
-    const o=AC.createOscillator(),v=AC.createGain(),fl=AC.createBiquadFilter();
-    o.type='sawtooth';o.frequency.value=BASS[Math.floor(i/4)%4];
-    fl.type='lowpass';fl.frequency.value=180;fl.Q.value=4;
-    v.gain.setValueAtTime(.0001,t);v.gain.linearRampToValueAtTime(.32,t+.02);v.gain.exponentialRampToValueAtTime(.0001,t+SPB*3.6);
-    o.connect(fl);fl.connect(v);v.connect(musicBus);o.start(t);o.stop(t+SPB*4);
-  }
-  const a=ARP[i%ARP.length];
-  if(a){
+/* --- BATERIA + GUITARRA --- */
+function kick(t,g){
+  g=g||1;
+  const o=AC.createOscillator(),v=AC.createGain();
+  o.type='sine';o.frequency.setValueAtTime(155,t);o.frequency.exponentialRampToValueAtTime(44,t+.09);
+  v.gain.setValueAtTime(.85*g,t);v.gain.exponentialRampToValueAtTime(.001,t+.22);
+  o.connect(v);v.connect(musicBus);o.start(t);o.stop(t+.25);
+  noiseHit(.03,.2,3000,2,t,musicBus);
+}
+function snare(t){
+  noiseHit(.16,.45,1900,.8,t,musicBus);
+  const o=AC.createOscillator(),v=AC.createGain();o.type='triangle';o.frequency.value=195;
+  v.gain.setValueAtTime(.28,t);v.gain.exponentialRampToValueAtTime(.001,t+.09);
+  o.connect(v);v.connect(musicBus);o.start(t);o.stop(t+.1);
+}
+function hat(t,open){noiseHit(open?.22:.045,open?.16:.11,8200,1.6,t,musicBus)}
+function crash(t){noiseHit(1.1,.26,6200,.5,t,musicBus)}
+function guitarChug(root,t,accent){
+  const fr=[root,root*1.4983,root*2]; /* tônica + 5ª + oitava = power chord */
+  for(let idx=0;idx<3;idx++){
     const o=AC.createOscillator(),v=AC.createGain();
-    o.type='triangle';o.frequency.value=a;
-    v.gain.setValueAtTime(.0001,t);v.gain.linearRampToValueAtTime(.15,t+.012);v.gain.exponentialRampToValueAtTime(.0001,t+.34);
-    o.connect(v);v.connect(musicBus);v.connect(delaySend);o.start(t);o.stop(t+.5);
-  }
-  if(i%32===16){
-    const o=AC.createOscillator(),v=AC.createGain();
-    o.type='sine';o.frequency.value=NOTE.E5;
-    v.gain.setValueAtTime(.0001,t);v.gain.linearRampToValueAtTime(.05,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+2.8);
-    o.connect(v);v.connect(musicBus);v.connect(delaySend);o.start(t);o.stop(t+3);
+    o.type='sawtooth';o.frequency.value=fr[idx];
+    const g=accent?(idx===0?.30:.19):(idx===0?.21:.13);
+    v.gain.setValueAtTime(.0001,t);
+    v.gain.linearRampToValueAtTime(g,t+.004);
+    v.gain.exponentialRampToValueAtTime(.0001,t+(accent?.30:.17));
+    o.connect(v);v.connect(guitarBus);o.start(t);o.stop(t+.36);
   }
 }
+function squeal(t){
+  const o=AC.createOscillator(),v=AC.createGain();
+  o.type='sawtooth';o.frequency.setValueAtTime(1174,t);o.frequency.exponentialRampToValueAtTime(1760,t+.35);
+  v.gain.setValueAtTime(.10,t);v.gain.exponentialRampToValueAtTime(.001,t+.65);
+  o.connect(v);v.connect(guitarBus);o.start(t);o.stop(t+.7);
+}
+function playStep(i,t){
+  const step=i%16, bar=Math.floor(i/16)%8;
+  const root=(bar<4?BAR_ROOTS[bar]:BAR_ROOTS2[bar-4]);
+  if(GALLOP[step])guitarChug(root,t,step%4===0);
+  if(step%2===0)hat(t,bar===7&&step===14);
+  if(step===0||step===8)kick(t);
+  if(step===6||step===14)kick(t,.65);
+  if(step===4||step===12)snare(t);
+  if(step===0&&bar===0)crash(t);
+  if(i%128===112)squeal(t);
+}
 function startMusic(){
-  if(!AC||musicTimer)return;
+  if(!AC||musicTimer||!SETTINGS.music)return;
   musicBus.gain.cancelScheduledValues(AC.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value,AC.currentTime);
-  musicBus.gain.linearRampToValueAtTime(.45,AC.currentTime+2.5);
-  stepIdx=0;nextNote=AC.currentTime+.15;
-  musicTimer=setInterval(()=>{while(nextNote<AC.currentTime+.35){playStep(stepIdx,nextNote);stepIdx++;nextNote+=SPB}},120);
+  musicBus.gain.linearRampToValueAtTime(.5,AC.currentTime+1.6);
+  stepIdx=0;nextNote=AC.currentTime+.12;
+  musicTimer=setInterval(()=>{while(nextNote<AC.currentTime+.35){playStep(stepIdx,nextNote);stepIdx++;nextNote+=SPB}},90);
 }
 function stopMusic(){
   if(!AC)return;
   if(musicTimer){clearInterval(musicTimer);musicTimer=null}
   musicBus.gain.cancelScheduledValues(AC.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value,AC.currentTime);
-  musicBus.gain.linearRampToValueAtTime(0,AC.currentTime+.6);
+  musicBus.gain.linearRampToValueAtTime(0,AC.currentTime+.5);
 }
-function applyAudioSettings(){
-  if(AC){sfxBus.gain.value=SETTINGS.sfx?1:0;if(SETTINGS.music)startMusic();else stopMusic()}
+function applySettings(){
+  if(AC)sfxBus.gain.value=SETTINGS.sfx?1:0;
   $('#crt').classList.toggle('off',!SETTINGS.crt);
   document.body.classList.toggle('noblood',!SETTINGS.blood);
 }
 let audioReady=false;
 function gestureInit(){
   if(audioReady){if(AC&&AC.state==='suspended')AC.resume();return}
-  audioReady=true;initAudio();applyAudioSettings();
+  audioReady=true;initAudio();applySettings();
+  if(menuActive&&SETTINGS.music)startMusic();
 }
 document.addEventListener('pointerdown',gestureInit);
 document.addEventListener('keydown',gestureInit);
@@ -508,7 +541,7 @@ function spawnDrop(xPct){
   });
 }
 
-/* ================= INTRO ================= */
+/* ================= INTRO (SEMPRE TOCA) ================= */
 const introEl=$('#intro');
 let introTimers=[],introDone=false;
 function runIntro(){
@@ -526,7 +559,8 @@ function endIntro(){
   if(introDone)return;introDone=true;
   introTimers.forEach(clearTimeout);introTimers=[];
   introEl.classList.add('hide');
-  setTimeout(()=>{introEl.classList.remove('show');store.set('klipza_seen',1);enterMenu()},650);
+  gestureInit(); /* se o usuário clicou pra pular, já libera o som */
+  setTimeout(()=>{introEl.classList.remove('show');enterMenu()},650);
 }
 introEl.addEventListener('pointerdown',()=>{if(!introDone)endIntro()});
 
@@ -547,6 +581,7 @@ function enterMenu(){
   menuTimers.push(setTimeout(()=>{st.classList.add('shaking');flashRed();SFX.boom()},1080));
   menuTimers.push(setTimeout(()=>st.classList.remove('shaking'),1560));
   menuTimers.push(setTimeout(startDrips,1700));
+  menuTimers.push(setTimeout(()=>{if(SETTINGS.music)startMusic()},1200)); /* rock só no menu */
 }
 setInterval(()=>{
   if(!menuActive)return;
@@ -557,12 +592,13 @@ setInterval(()=>{
 /* ================= AÇÕES ================= */
 function playSequence(){
   if(playing)return;playing=true;menuActive=false;
+  stopMusic();
   $('#slashFx').classList.add('go');SFX.slash();flashRed();
   stage.classList.add('shaking');
   setTimeout(()=>stage.classList.remove('shaking'),460);
   setTimeout(()=>{$('#slashFx').classList.remove('go');$('#soonOverlay').classList.add('show');playing=false},840);
 }
-function closeSoon(){$('#soonOverlay').classList.remove('show');menuActive=true;setFocus(0)}
+function closeSoon(){$('#soonOverlay').classList.remove('show');menuActive=true;setFocus(0);if(SETTINGS.music)startMusic()}
 function openSettings(){$('#settingsModal').classList.add('show');refreshRows()}
 function closeSettings(){$('#settingsModal').classList.remove('show')}
 function refreshRows(){
@@ -577,14 +613,15 @@ $('#btnCloseSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.b
 $('#btnBackSoon').addEventListener('click',e=>{e.currentTarget.blur();SFX.back();closeSoon()});
 $('#btnReintro').addEventListener('click',e=>{
   e.currentTarget.blur();SFX.ok();closeSettings();
-  menuActive=false;stopDrips();
+  menuActive=false;stopDrips();stopMusic();
   stage.classList.remove('in','shaking');
   introDone=false;runIntro();
 });
 document.querySelectorAll('.row[data-key]').forEach(r=>{
   r.addEventListener('mouseenter',()=>SFX.hover());
   r.addEventListener('click',()=>{
-    const k=r.dataset.key;SETTINGS[k]=!SETTINGS[k];saveSettings();applyAudioSettings();SFX.toggle();refreshRows();
+    const k=r.dataset.key;SETTINGS[k]=!SETTINGS[k];saveSettings();applySettings();SFX.toggle();refreshRows();
+    if(k==='music'){if(AC){if(SETTINGS.music&&menuActive)startMusic();else stopMusic()}}
   });
 });
 btnList().forEach(b=>b.addEventListener('mouseenter',()=>{SFX.hover()}));
@@ -603,9 +640,9 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-/* ================= BOOT ================= */
-applyAudioSettings();
-if(store.get('klipza_seen',0))enterMenu();else runIntro();
+/* ================= BOOT: INTRO SEMPRE ================= */
+applySettings();
+runIntro();
 })();
 </script>
 </body>
