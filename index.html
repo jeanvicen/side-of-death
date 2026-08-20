@@ -215,19 +215,34 @@
   @keyframes crtFlick{0%,100%{opacity:1}7%{opacity:.93}9%{opacity:1}46%{opacity:.96}48%{opacity:1}}
   #crt.off{display:none}
 
-  @media (max-width:640px){
-    #reaper,#reaperFallback{height:58vh}
-    #installPrompt{gap:10px;padding:12px 10px 12px 12px}
-    #installPrompt .install-copy{font-size:8px}
-    #installPrompt .install-copy b{font-size:9px}
-    #installPrompt .install-action{font-size:7px;padding:11px 8px}
+  @media (orientation:portrait){
+    #menuUI{padding-top:5vh}
+    #reaper,#reaperFallback{height:min(42vh,460px)}
+    #reaperFloat{margin-bottom:-1vh}
+    #titleLine1{font-size:clamp(10px,3.5vw,17px);letter-spacing:.42em}
+    #titleLine2{font-size:clamp(38px,14vw,74px)}
+    #menuButtons{gap:14px;margin-top:clamp(24px,4vh,52px)}
+    .mbtn{min-width:min(280px,78vw);padding:15px 24px}
+    #hint{display:none}
+    #credits{font-size:6px;line-height:1.8;bottom:calc(9px + env(safe-area-inset-bottom))}
+    #installPrompt{width:calc(100vw - 20px);gap:8px;padding:11px 9px 11px 11px}
+    #installPrompt .install-mark{width:30px;height:36px;flex-basis:30px}
+    #installPrompt .install-mark::before{font-size:16px}
+    #installPrompt .install-copy{font-size:7px;line-height:1.65}
+    #installPrompt .install-copy b{font-size:8px}
+    #installPrompt .install-action{font-size:7px;padding:10px 7px}
     #installPrompt .install-dismiss{font-size:7px}
-    #menuButtons{margin-top:clamp(30px,6vh,70px)}
-    .mbtn{padding:16px 30px}
+  }
+
+  @media (max-width:640px){
+    #reaper,#reaperFallback{height:min(42vh,460px)}
+    #menuButtons{margin-top:clamp(24px,4vh,52px)}
+    .mbtn{padding:15px 24px}
   }
 </style>
 </head>
 <body>
+<audio id="bgMusic" preload="auto" loop playsinline aria-hidden="true"></audio>
 
 <div id="stage">
   <div id="bgWrap"><img id="bg" alt="" draggable="false"></div>
@@ -336,6 +351,8 @@ const REAPER_URL='./assets/reaper.png';
    150 BPM - Aggressive, Driving, Intense
    ============================================ */
 const MUSIC_URL = './assets/metalmania.mp3';
+const bgMusic=$('#bgMusic');
+bgMusic.src=MUSIC_URL;
 
 const store={
   get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -349,40 +366,43 @@ let AC=null, master, sfxBus, musicBus, musicBuffer=null, musicSource=null, music
 let musicLoaded=false, musicPlaying=false;
 let musicLoadPromise=null;
 let musicFadeInterval=null;
+let musicMode='native';
 
 function initAudio(){
   if(AC){if(AC.state==='suspended')AC.resume();return}
-  try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}
-  
-  master=AC.createGain();master.gain.value=.85;master.connect(AC.destination);
-  sfxBus=AC.createGain();sfxBus.connect(master);
-  musicBus=AC.createGain();musicBus.gain.value=.9;musicBus.connect(master);
-  
-  // Carrega a música real
+  try{
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    master=AC.createGain();master.gain.value=.85;master.connect(AC.destination);
+    sfxBus=AC.createGain();sfxBus.connect(master);
+    musicBus=AC.createGain();musicBus.gain.value=1;musicBus.connect(master);
+  }catch(e){
+    AC=null;
+  }
+  bgMusic.volume=.82;
+  bgMusic.load();
   loadMusic();
 }
 
-async function loadMusic(){
-  if(!AC)return null;
-  if(musicLoaded)return musicBuffer;
+function loadMusic(){
+  if(musicLoaded)return Promise.resolve(true);
   if(musicLoadPromise)return musicLoadPromise;
-  musicLoadPromise=(async()=>{
-    try{
-      const response = await fetch(MUSIC_URL);
-      const arrayBuffer = await response.arrayBuffer();
-      musicBuffer = await AC.decodeAudioData(arrayBuffer);
-      musicLoaded = true;
-      console.log('✓ Música carregada:', musicBuffer.duration.toFixed(1), 'segundos');
-      return musicBuffer;
-    }catch(e){
-      console.warn('Falha ao carregar música:', e);
-      musicLoaded = false;
-      return null;
-    }
-  })();
-  const result=await musicLoadPromise;
-  musicLoadPromise=null;
-  return result;
+  musicLoadPromise=new Promise(resolve=>{
+    let settled=false;
+    const finish=(ok)=>{
+      if(settled)return;
+      settled=true;
+      musicLoaded=ok;
+      musicLoadPromise=null;
+      if(ok)console.log('✓ Música pronta para reprodução nativa');
+      else console.warn('Falha ao carregar música local:', MUSIC_URL);
+      resolve(ok);
+    };
+    if(bgMusic.readyState>=2){finish(true);return}
+    bgMusic.addEventListener('canplay',()=>finish(true),{once:true});
+    bgMusic.addEventListener('error',()=>finish(false),{once:true});
+    bgMusic.load();
+  });
+  return musicLoadPromise;
 }
 
 /* --- SFX (sons de interface) --- */
@@ -421,67 +441,38 @@ const SFX={
 
 /* ================= MÚSICA (LOOP COM CROSSFADE) ================= */
 function startMusic(){
-  if(!AC || !SETTINGS.music || musicPlaying || !musicLoaded) return;
-  
-  // Para qualquer música anterior
-  stopMusic();
-  
-  // Cria nova fonte de áudio
-  musicSource = AC.createBufferSource();
-  musicSource.buffer = musicBuffer;
-  musicSource.loop = true;  // Loop contínuo!
-  
-  // Gain node para controle de volume
-  musicGain = AC.createGain();
-  musicGain.gain.value = 0;
-  
-  musicSource.connect(musicGain);
-  musicGain.connect(musicBus);
-  
-  // Fade in suave (1.5 segundos)
-  musicGain.gain.linearRampToValueAtTime(0.75, AC.currentTime + 1.5);
-  
-  musicSource.start(0);
-  musicPlaying = true;
-  
-  console.log('▶ Música iniciada (loop contínuo)');
+  if(!SETTINGS.music || musicPlaying)return;
+  musicPlaying=true;
+  loadMusic().then(ok=>{
+    if(!ok){musicPlaying=false;return}
+    bgMusic.volume=.04;
+    const playPromise=bgMusic.play();
+    if(playPromise&&playPromise.catch)playPromise.catch(()=>{musicPlaying=false});
+    clearInterval(musicFadeInterval);
+    musicFadeInterval=setInterval(()=>{
+      bgMusic.volume=Math.min(.82,bgMusic.volume+.06);
+      if(bgMusic.volume>=.82){clearInterval(musicFadeInterval);musicFadeInterval=null}
+    },120);
+    console.log('▶ Música iniciada (reprodução nativa em loop)');
+  });
 }
 
 function stopMusic(){
-  if(!AC || !musicPlaying) return;
-  
-  if(musicGain){
-    // Fade out suave (0.8 segundos)
-    musicGain.gain.cancelScheduledValues(AC.currentTime);
-    musicGain.gain.setValueAtTime(musicGain.gain.value, AC.currentTime);
-    musicGain.gain.linearRampToValueAtTime(0, AC.currentTime + 0.8);
-    
-    // Para depois do fade out
-    setTimeout(()=>{
-      if(musicSource){
-        try{musicSource.stop()}catch(e){}
-        musicSource = null;
-      }
-      musicGain = null;
-    }, 850);
-  }
-  
-  musicPlaying = false;
-  console.log('⏸ Música parada');
+  clearInterval(musicFadeInterval);musicFadeInterval=null;
+  bgMusic.pause();
+  bgMusic.currentTime=0;
+  musicPlaying=false;
 }
 
 function pauseMusic(){
-  if(AC && AC.state === 'running'){
-    AC.suspend();
-    musicPlaying = false;
-  }
+  if(!bgMusic.paused)bgMusic.pause();
+  musicPlaying=false;
+  if(AC&&AC.state==='running')AC.suspend();
 }
 
 function resumeMusic(){
-  if(AC && AC.state === 'suspended'){
-    AC.resume();
-    if(musicSource) musicPlaying = true;
-  }
+  if(AC&&AC.state==='suspended')AC.resume();
+  if(SETTINGS.music&&menuActive&&!musicPlaying)startMusic();
 }
 
 function applySettings(){
@@ -519,7 +510,7 @@ async function enterImmersive(){
     }
   }catch(e){}
   try{
-    if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+    if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait');
   }catch(e){}
 }
 window.addEventListener('beforeinstallprompt',e=>{
@@ -693,9 +684,8 @@ function runIntro(){
   introTimers.push(setTimeout(endIntro,t2+2200));
 }
 function startIntroMusic(){
-  if(!AC || !SETTINGS.music)return;
-  if(musicLoaded){startMusic();return}
-  loadMusic().then(()=>{if(SETTINGS.music&&!musicPlaying)startMusic()});
+  if(!SETTINGS.music)return;
+  startMusic();
 }
 function endIntro(){
   if(introDone)return;introDone=true;
