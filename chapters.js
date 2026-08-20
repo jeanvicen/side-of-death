@@ -6,7 +6,7 @@
  * O motor em index.html lê SOD_CONTENT e permanece genérico.
  */
 window.SOD_CONTENT = {
-  version: '3.1.0',
+  version: '4.0.0',
   activeChapter: 1,
 
   audio: {
@@ -114,12 +114,39 @@ window.SOD_CONTENT = {
     bossWarningWave: 48
   },
 
+  exploration: {
+    startingLives: 5,
+    maxLives: 9,
+    startingFragments: 0,
+    autoSaveDelay: 0.55,
+    saveKey: 'sod_progress_v4',
+    cityWidth: 1700,
+    gateX: 1460,
+    houseCount: 4,
+    chestCount: 3,
+    chestSpacing: 330,
+    cityNames: [
+      'CIDADE DO SINO MUDO', 'VILA DOS OSSOS', 'BAIRRO DA LUA VERMELHA',
+      'CIDADE DAS JANELAS VAZIAS', 'PORTO DO VÉU', 'DISTRITO DOS ENFORCADOS'
+    ],
+    chestRewards: ['fragment', 'heal', 'life', 'fragment', 'fragment', 'life'],
+    fragmentGoalPerCity: 3
+  },
+
   chapters: {
     1: {
       id: 1,
       title: 'CAPÍTULO 1',
       subtitle: 'O CEMITÉRIO QUE RESPIRA',
       objective: 'AS ALMAS FUGITIVAS\\nDEVOLVA-AS AO SILÊNCIO',
+      worldWidth: 1700,
+      cityMap: {
+        cityCount: 50,
+        houseCount: 4,
+        chestCount: 3,
+        gateX: 1460,
+        backgroundStyle: 'ghost-city'
+      },
       world: {
         background: './assets/world-01-stage.png',
         accent: '#ff3048',

@@ -66,7 +66,7 @@ No Xcode, selecione o time de desenvolvimento, confirme o Bundle Identifier `com
 
 ## Atualização por capítulos
 
-Edite `chapters.js` para trocar textos, cenas, vozes, cenários, variantes de NPC e o número de ondas. Para cenas com narração, atualize também `audio.voiceDurations` com a duração real dos WAVs e mantenha `audio.holdAfterVoice` como margem de respiro; o motor nunca troca de plano antes do fim da voz. O Capítulo 1 está configurado com 50 ondas; ao concluir a última, o jogo exibe `PRÓXIMO CAPÍTULO` e carrega o cenário definido no próximo objeto de `SOD_CONTENT.chapters`. Depois de qualquer alteração, execute `npm run build` e, para pacotes nativos, `npx cap sync`.
+Edite `chapters.js` para trocar textos, cenas, vozes, cenários, variantes de NPC, cidades, recompensas de baús e o número de ondas. Para cenas com narração, atualize também `audio.voiceDurations` com a duração real dos WAVs e mantenha `audio.holdAfterVoice` como margem de respiro; o motor nunca troca de plano antes do fim da voz. O Capítulo 1 está configurado com 50 cidades/ondas; ao liberar uma cidade, o jogador caminha até o portão para avançar. O salvamento automático usa `exploration.saveKey`, e `RESETAR PROGRESSO` nas configurações apaga a campanha local. Depois de qualquer alteração, execute `npm run build` e, para pacotes nativos, `npx cap sync`.
 
 ## Créditos da música
 
@@ -92,4 +92,4 @@ A configuração deixa o projeto pronto para ser aberto e compilado nas ferramen
 
 ## Verificação da correção horizontal e do áudio
 
-A versão v2 foi validada localmente em landscape. O menu original permanece presente, a introdução usa movimento, partículas, oito falas em português e ambiência de cemitério, e o canvas mantém proporção 16:9 com tiles de cenário. O PWA e os projetos nativos declaram orientação horizontal; a reprodução dos áudios locais é desbloqueada após o primeiro gesto.
+A versão 4.0.0 foi validada localmente em landscape. O menu original permanece presente, a introdução usa movimento, partículas, oito falas em português e ambiência de cemitério, e o canvas mantém proporção 16:9 com tiles de cenário. A exploração cria casas, baús, portão e HUD de cidade; cinco vidas, vidas extras, fragmentos, autosave, derrota e reset foram testados. O PWA e os projetos nativos declaram orientação horizontal; a reprodução dos áudios locais é desbloqueada após o primeiro gesto.

@@ -24,6 +24,7 @@ git push origin main
 | `player` | Vida, velocidade, pulo duplo, rolamento, combos e foice |
 | `enemyAI` | Agressividade e poderes dos NPCs |
 | `difficulty` | Escalonamento e onda do Boss |
+| `exploration` | Vidas, cidades, baús, casas, recompensas e storage |
 | `chapters[n]` | História e regras de uma fase |
 
 ## Novo capítulo
@@ -91,6 +92,25 @@ A versão web não chama `requestFullscreen`, pois o navegador mostra uma mensag
 
 O ataque usa `K`. A sequência normal está em `player.combos`. `S + K` usa `crouchCombo` e cria o gancho rasteiro. `W + K` no ar usa `airCombo`. `L` lança a foice em chamas; `Shift` faz o rolamento com invulnerabilidade curta; dois toques de `W` executam o pulo duplo. Ajuste cooldowns, dano, velocidade e janela de combo no objeto `player`.
 
+## Cidades, casas e baús
+
+A primeira fase usa uma cidade por onda. Os fantasmas precisam ser derrotados; depois, o portão da direita abre e o jogador caminha até ele. O motor cria casas, baús e portão a partir de `exploration` e do `cityMap` do capítulo.
+
+```js
+exploration: {
+  startingLives: 5,
+  maxLives: 9,
+  cityNames: ['CIDADE DO SINO MUDO', 'VILA DOS OSSOS'],
+  houseCount: 4,
+  chestCount: 3,
+  chestRewards: ['fragment', 'heal', 'life'],
+  gateX: 1460,
+  saveKey: 'sod_progress_v4'
+}
+```
+
+`fragment` aumenta fragmentos, `heal` restaura vitalidade e `life` concede uma vida até `maxLives`. Casas são abertas com S+K quando o jogador está diante da porta. O salvamento automático registra cidade, checkpoint, vidas, fragmentos, casas e baús em `localStorage`. Para começar de novo, use `RESETAR PROGRESSO` dentro de SETTINGS; o menu principal não é alterado.
+
 ## Boss da onda 50
 
 O bloco `boss` do capítulo controla nome, vida, sprite, arena, fases por percentual de vida e poderes. O Boss só é invocado na onda definida em `boss.wave` ou em `difficulty.bossWave`. A configuração atual usa a Bruxa do Véu com chuva de fogo, teleporte, três orbes e ataque de garras.
@@ -106,6 +126,10 @@ boss: {
   arenaBackground: './assets/world-03-witch-arena.png'
 }
 ```
+
+## QA local
+
+Use `?debugcity=1` para testar a cidade sem percorrer a cinematics ou combater todas as ondas. No console, `SOD_DEBUG.state()` mostra cidade, vidas, fragmentos, baús, portão e storage; `moveToChest(id)`, `openChest()`, `moveToHouse(id)`, `exorciseHouse()`, `clearCity()`, `advanceCity()`, `loseLife()`, `save()` e `reset()` aceleram os casos de teste. Use `?debugboss=1` para a Bruxa da onda 50.
 
 ## O que não editar
 

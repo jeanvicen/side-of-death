@@ -1,4 +1,4 @@
-const CACHE_NAME = 'side-of-death-v8';
+const CACHE_NAME = 'side-of-death-v9';
 const APP_SHELL = [
   './',
   './index.html',

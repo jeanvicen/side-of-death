@@ -34,3 +34,9 @@ A voz natural está em oito arquivos `assets/voice-cine-01.wav` a `assets/voice-
 ## Assets v3 — Boss da onda 50
 
 A Bruxa usa `assets/boss-01-witch-sheet.png`, folha 4×2 com oito estados: idle, invocação, ataque, chuva de fogo, teleporte, dano, enfurecida e derrota. O fundo gerado originalmente com chroma foi limpo para alpha real antes da integração. A arena final é `assets/world-03-witch-arena.png`, um círculo ritual em ruínas usado quando a onda 50 começa.
+
+## Assets v4 — exploração procedural
+
+A expansão de cidades-fantasma não depende de um PNG por cidade. Casas, janelas, portas, baús, brilhos de recompensa e o portão do véu são desenhados proceduralmente no canvas, usando a paleta do capítulo. Isso permite criar até 50 cidades editando apenas `exploration.cityNames`, `cityMap` e `chestRewards` em `chapters.js`; novos fundos podem ser adicionados opcionalmente quando uma cidade exigir uma identidade visual própria.
+
+A pesquisa de referência e as decisões de design estão em `CARRION-DESIGN-RESEARCH.md`. Nenhum asset, personagem, nome ou identidade visual de CARRION foi reutilizado.
