@@ -24,3 +24,7 @@ A primeira onda exibiu a Morte e duas almas com o HUD de vitalidade, objetivo e 
 ## Verificação pública v2 — commit 0f4fd91
 
 O deployment de produção do commit `0f4fd91` foi concluído com sucesso. No domínio público, o menu original apareceu sem alteração e PLAY abriu a cinematics atualizada com almas em movimento visual, pan/zoom, letterbox, legenda em duas linhas e `PULAR INTRO`. Os novos assets chegaram ao deploy e o arquivo central `chapters.js` está sendo servido pela mesma origem.
+
+## Correção de apoio dos sprites — commit e8f0276
+
+O deploy público do commit `e8f0276` preservou o menu e abriu a cinematics normalmente. A correção aplica uma âncora inferior por estado/variante, reduz a flutuação das almas e mantém a sombra na linha física do chão durante idle, corrida e ataque. A verificação pública mostrou a Morte e as almas da primeira onda apoiadas na mesma base visual do cenário.
