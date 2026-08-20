@@ -35,8 +35,10 @@ A voz natural está em oito arquivos `assets/voice-cine-01.wav` a `assets/voice-
 
 A Bruxa usa `assets/boss-01-witch-sheet.png`, folha 4×2 com oito estados: idle, invocação, ataque, chuva de fogo, teleporte, dano, enfurecida e derrota. O fundo gerado originalmente com chroma foi limpo para alpha real antes da integração. A arena final é `assets/world-03-witch-arena.png`, um círculo ritual em ruínas usado quando a onda 50 começa.
 
-## Assets v4 — exploração procedural
+## Assets v5 — arenas, cristais e sprites legíveis
 
-A expansão de cidades-fantasma não depende de um PNG por cidade. Casas, janelas, portas, baús, brilhos de recompensa e o portão do véu são desenhados proceduralmente no canvas, usando a paleta do capítulo. Isso permite criar até 50 cidades editando apenas `exploration.cityNames`, `cityMap` e `chestRewards` em `chapters.js`; novos fundos podem ser adicionados opcionalmente quando uma cidade exigir uma identidade visual própria.
+A expansão v5 removeu casas, janelas e portas do gameplay. Cada cidade agora usa uma arena horizontal com cristais decorativos, caches cristalinos interativos, drops luminosos, portão do véu e espaço livre para o jogador e os NPCs. Esses elementos são desenhados proceduralmente no canvas e podem ser combinados com `exploration.scenarioCycle` em `chapters.js`.
+
+A referência visual adicional da arena está em `assets/arena-crystal-reference.png`. As folhas usadas pelo motor são as versões com alpha limpo: `assets/player-01-reaper-sheet-clean.png`, `assets/enemy-01-soul-sheet-clean.png`, `assets/enemy-02-shade-sheet-clean.png`, `assets/enemy-03-harbinger-sheet-clean.png` e `assets/boss-01-witch-sheet-clean.png`. O script `scripts/clean-sprite-alpha.py` documenta a limpeza determinística do chroma residual dos exports originais.
 
 A pesquisa de referência e as decisões de design estão em `CARRION-DESIGN-RESEARCH.md`. Nenhum asset, personagem, nome ou identidade visual de CARRION foi reutilizado.

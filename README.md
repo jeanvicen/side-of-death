@@ -65,7 +65,7 @@ Para abrir os projetos nativos, use `npx cap open android` em um ambiente Androi
 
 ## Arquivo central `chapters.js`
 
-O objeto `SOD_CONTENT` possui cinco áreas principais. `audio` aponta para a trilha, ambiência e vozes. `assets` registra os sprites e cenários principais. `controls` define as teclas. `defaults`, `player`, `enemyAI` e `difficulty` controlam regras globais. `chapters` contém os capítulos que o jogador percorre.
+O objeto `SOD_CONTENT` possui áreas de conteúdo editável. `audio` aponta para a trilha, ambiência e vozes. `assets` registra os sprites e cenários principais. `controls` define as teclas. `defaults`, `player`, `enemyAI`, `difficulty`, `exploration` e `rage` controlam regras globais. `chapters` contém os capítulos que o jogador percorre.
 
 | Área | O que controla |
 |---|---|
@@ -76,6 +76,8 @@ O objeto `SOD_CONTENT` possui cinco áreas principais. `audio` aponta para a tri
 | `player` | Vida, velocidade, pulo duplo, rolamento, arremesso e combos |
 | `enemyAI` | Agressividade, distância de ataque, poderes e cooldowns dos NPCs |
 | `difficulty` | Crescimento de vida, velocidade, dano, elites e onda do Boss |
+| `exploration` | Arenas, cristais, caches, drops, cidades, portão, vidas e autosave |
+| `rage` | Barra de fúria, ganho por combate, duração, multiplicadores e transformação |
 | `chapters` | História, cenários, cenas, ondas e Boss de cada capítulo |
 
 ## Criar ou alterar um capítulo
@@ -111,7 +113,7 @@ Para medir uma voz nova antes de editar a cena, execute `python3 scripts/inspect
 
 ## Combate do jogador
 
-Os controles atuais são **A/D** para andar, **W** para pular, **S** para agachar, **K** para atacar ou abrir um baú, **S+K** perto de uma casa para exorcizá-la, **L** para lançar a foice em chamas, **Shift** para rolar e **Esc** para voltar ao menu. No celular, os botões de toque devem ser associados às mesmas ações; mantenha S pressionado enquanto toca K para exorcizar uma casa.
+Os controles atuais são **A/D** para andar, **W** para pular, **S** para agachar, **K** para atacar ou abrir um cache cristalino próximo, **L** para lançar a foice em chamas, **Shift** para rolar e **Esc** para voltar ao menu. No celular, os botões são maiores, translúcidos, rotulados e associados às mesmas ações; uma legenda permanece visível para reduzir a curva de aprendizado.
 
 O ataque K percorre os objetos de `player.combos`. O primeiro golpe é horizontal, o segundo é ascendente e o terceiro é um finalizador. Se K for usado agachado, o motor usa `player.crouchCombo`, criando o gancho rasteiro. Se K for usado no ar, usa `player.airCombo`, criando o corte aéreo. O intervalo permitido para encadear golpes está em `comboWindow`.
 
@@ -132,31 +134,33 @@ Cada comportamento pode ter um poder em `enemyAI.behaviors`. Wisp usa dash, Shad
   damage: 12,
   size: 1.1,
   color: '#d39cff',
-  sheet: './assets/enemy-02-shade-sheet.png',
+  sheet: './assets/enemy-02-shade-sheet-clean.png',
   weight: 3
 }
 ```
 
-## Exploração em cidades, casas e baús
+## Arenas, cristais, drops e cidades
 
-A primeira fase agora é um mapa horizontal dividido em cidades-fantasma. Cada cidade corresponde a uma onda: os fantasmas precisam ser derrotados, mas a progressão não acontece automaticamente. Quando a cidade é libertada, o portão à direita acende e o jogador caminha até ele para entrar na próxima cidade. A configuração global fica em `SOD_CONTENT.exploration`; cada capítulo pode complementar com `cityMap`.
+A primeira fase agora é um mapa horizontal dividido em arenas de cidades-fantasma. Cada cidade corresponde a uma onda: os fantasmas precisam ser derrotados, mas a progressão não acontece automaticamente. Quando a arena é libertada, o portão à direita acende e o jogador caminha até ele para entrar na próxima cidade. A configuração global fica em `SOD_CONTENT.exploration`; cada capítulo pode complementar com `cityMap`. Não há casas: o espaço é reservado para leitura clara de combate, cristais e NPCs.
 
 | Elemento | Regra atual | Campo editável |
 |---|---|---|
 | Cidades | Até 50 cidades/ondas no Capítulo 1 | `waves.total`, `exploration.cityNames` |
-| Casas | Quatro casas por cidade, com exorcismo | `exploration.houseCount`, `cityMap.houseCount` |
-| Baús | Três por cidade, com recompensas | `exploration.chestCount`, `chestRewards` |
+| Cristais | Cristais decorativos e caches interativos, sem casas | `exploration.crystalCount`, `exploration.chestCount` |
+| Caches | Caches cristalinos por arena, com recompensas | `exploration.chestCount`, `chestRewards` |
+| Drops | Fragmentos, cura e fúria podem cair dos inimigos | `dropChance`, `dropRewards` |
+| Cenários | Fundos rotativos por cidade/onda | `scenarioCycle` |
 | Fragmentos | Recurso permanente para exploração e futuras habilidades | `startingFragments`, `fragmentGoalPerCity` |
 | Vidas | Começa com 5; pode recuperar vidas de vivos | `startingLives`, `maxLives` |
 | Portão | Só abre depois da derrota dos fantasmas | `exploration.gateX`, `cityMap.gateX` |
 
-Os baús usam a sequência de recompensas em `exploration.chestRewards`: `fragment` aumenta fragmentos, `heal` recupera a vitalidade e `life` concede uma vida até `maxLives`. Casas e baús já coletados ficam registrados por capítulo/cidade no salvamento automático.
+Os caches usam a sequência de recompensas em `exploration.chestRewards`: `fragment` aumenta fragmentos, `heal` recupera a vitalidade, `rage` carrega a barra e `life` concede uma vida até `maxLives`. Caches já coletados ficam registrados por capítulo/cidade no salvamento automático. Inimigos também podem soltar cristais coletáveis conforme `dropChance`.
 
 ## Vidas, salvamento e reset
 
-A Morte começa com cinco vidas. Quando a vitalidade chega a zero, uma vida é consumida e a personagem retorna ao checkpoint da cidade. Ao consumir a quinta vida, o jogo para e mostra `A MORTE FOI SILENCIADA`; `RECOMEÇAR CIDADE` restaura as vidas configuradas sem apagar fragmentos ou baús. O salvamento usa `localStorage` na chave definida em `exploration.saveKey` e ocorre no início da cidade, após explorar, após abrir baú, exorcizar casa, perder vida, atravessar portão, trocar de aba e sair da página.
+A Morte começa com cinco vidas. Quando a vitalidade chega a zero, uma vida é consumida e a personagem retorna ao checkpoint da cidade. Ao consumir a quinta vida, o jogo para e mostra `A MORTE FOI SILENCIADA`; `RECOMEÇAR CIDADE` restaura as vidas configuradas sem apagar fragmentos ou baús. O salvamento usa `localStorage` na chave definida em `exploration.saveKey` e ocorre no início da cidade, após explorar, abrir cache, coletar drop, perder vida, atravessar portão, trocar de aba e sair da página.
 
-O botão `RESETAR PROGRESSO` fica dentro de **SETTINGS**, não no menu principal. Ele pede confirmação e apaga cidade, checkpoint, vidas, fragmentos, casas e baús persistidos. Isso preserva o menu original enquanto fornece uma forma segura de começar uma campanha nova.
+O botão `RESETAR PROGRESSO` fica dentro de **SETTINGS**, não no menu principal. Ele pede confirmação e apaga arena, checkpoint, vidas, fragmentos e caches persistidos. Isso preserva o menu original enquanto fornece uma forma segura de começar uma campanha nova.
 
 ## Dificuldade e onda 50
 
@@ -166,7 +170,7 @@ Na configuração atual, a onda 50 apresenta **A BRUXA DO VÉU**, com 420 pontos
 
 ## Assets e transparência
 
-Folhas de personagem devem ter fundo transparente real e grade consistente. A Morte usa uma grade 4×3; as almas e a Bruxa usam uma grade 4×2 por padrão. O motor usa a âncora inferior da célula para compensar margens internas diferentes entre frames. O arquivo `ASSETS.md` registra o uso de cada asset.
+Folhas de personagem devem ter fundo transparente real e grade consistente. A Morte usa uma grade 4×3; as almas e a Bruxa usam uma grade 4×2 por padrão. Na v5, use as folhas `*-clean.png`, que são as versões carregadas pelo motor para evitar chroma verde residual. O motor usa a âncora inferior da célula para compensar margens internas diferentes entre frames. O arquivo `ASSETS.md` registra o uso de cada asset.
 
 Ao adicionar um caminho novo, inclua-o em `sw.js` dentro de `APP_SHELL` para disponibilizar o conteúdo no cache offline. Depois execute `npm run build` para copiar o arquivo para `www/`.
 
@@ -184,7 +188,7 @@ git diff --check
 
 Abra o jogo em landscape e confirme o caminho **menu → PLAY → sangue → cinematics → Capítulo 1 → gameplay**. Teste idle, corrida, pulo duplo, agachamento, ataque normal, combo, gancho rasteiro, corte aéreo, rolamento, foice lançada e ataque de poder dos NPCs. Nas ondas 48–50, confirme aviso, arena e Boss. Na web, confirme que `document.fullscreenElement` permanece vazio: o jogo não chama mais `requestFullscreen`, evitando a bolha nativa do navegador que instrui o usuário a arrastar para sair da tela cheia. A orientação horizontal continua sendo aplicada pelo wrapper nativo e a instrução de rotação permanece para portrait.
 
-Para testar a Bruxa sem atravessar manualmente as 49 ondas, abra localmente `http://localhost:4173/?debugboss=1`. Para testar cidades, baús, casas, portões, vidas e storage, use `http://localhost:4173/?debugcity=1`. O modo de QA é ativado somente pela query string, não aparece no menu nem altera a experiência normal. Os comandos locais expostos incluem `SOD_DEBUG.state()`, `moveToChest(id)`, `openChest()`, `moveToHouse(id)`, `exorciseHouse()`, `clearCity()`, `advanceCity()`, `loseLife()`, `save()` e `reset()`. Os controles de toque esperados são `a`, `d`, `s`, `w`, `k`, `l` e `shift`.
+Para testar a Bruxa sem atravessar manualmente as 49 ondas, abra localmente `http://localhost:4173/?debugboss=1`. Para testar arenas, caches, portões, vidas, fúria e storage, use `http://localhost:4173/?debugcity=1`. O modo de QA é ativado somente pela query string, não aparece no menu nem altera a experiência normal. Os comandos locais expostos incluem `SOD_DEBUG.state()`, `moveToChest(id)`, `openChest()`, `clearCity()`, `advanceCity()`, `loseLife()`, `fillRage()`, `save()` e `reset()`. Os controles de toque esperados são `a`, `d`, `s`, `w`, `k`, `l` e `shift`.
 
 ## Publicação web e nativa
 

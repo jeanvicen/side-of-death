@@ -24,7 +24,8 @@ git push origin main
 | `player` | Vida, velocidade, pulo duplo, rolamento, combos e foice |
 | `enemyAI` | Agressividade e poderes dos NPCs |
 | `difficulty` | Escalonamento e onda do Boss |
-| `exploration` | Vidas, cidades, baús, casas, recompensas e storage |
+| `exploration` | Arenas, cidades, cristais, caches, drops, vidas, portão e storage |
+| `rage` | Ganho, limite, duração, multiplicadores e transformação cinematográfica |
 | `chapters[n]` | História e regras de uma fase |
 
 ## Novo capítulo
@@ -90,26 +91,30 @@ A versão web não chama `requestFullscreen`, pois o navegador mostra uma mensag
 
 ## Combos e habilidades
 
-O ataque usa `K`. A sequência normal está em `player.combos`. `S + K` usa `crouchCombo` e cria o gancho rasteiro. `W + K` no ar usa `airCombo`. `L` lança a foice em chamas; `Shift` faz o rolamento com invulnerabilidade curta; dois toques de `W` executam o pulo duplo. Ajuste cooldowns, dano, velocidade e janela de combo no objeto `player`.
+O ataque usa `K`. A sequência normal está em `player.combos`. `W + K` no ar usa `airCombo`; perto de um cache cristalino, `K` abre a recompensa. `L` lança a foice em chamas; `Shift` faz o rolamento com invulnerabilidade curta; dois toques de `W` executam o pulo duplo. Ajuste cooldowns, dano, velocidade e janela de combo no objeto `player`. A fúria é configurada no objeto global `rage`: eliminações e golpes enchem a barra; em 100%, uma cinematics de transformação aumenta temporariamente Morte e foice. O fim da duração retorna ao normal sem cinematics.
 
-## Cidades, casas e baús
+## Arenas, cristais, caches e drops
 
-A primeira fase usa uma cidade por onda. Os fantasmas precisam ser derrotados; depois, o portão da direita abre e o jogador caminha até ele. O motor cria casas, baús e portão a partir de `exploration` e do `cityMap` do capítulo.
+A primeira fase usa uma arena por onda. Os fantasmas precisam ser derrotados; depois, o portão da direita abre e o jogador caminha até ele. O motor cria cristais decorativos, caches cristalinos, drops e portão a partir de `exploration` e do `cityMap` do capítulo. Não há casas.
 
 ```js
 exploration: {
   startingLives: 5,
   maxLives: 9,
   cityNames: ['CIDADE DO SINO MUDO', 'VILA DOS OSSOS'],
-  houseCount: 4,
-  chestCount: 3,
-  chestRewards: ['fragment', 'heal', 'life'],
-  gateX: 1460,
-  saveKey: 'sod_progress_v4'
+  crystalCount: 4,
+  chestCount: 4,
+  chestSpacing: 360,
+  chestRewards: ['fragment', 'heal', 'rage', 'life'],
+  dropChance: 0.36,
+  dropRewards: ['fragment', 'heal', 'rage'],
+  scenarioCycle: ['./assets/world-01-stage.png', './assets/arena-crystal-reference.png'],
+  gateX: 1660,
+  saveKey: 'sod_progress_v5'
 }
 ```
 
-`fragment` aumenta fragmentos, `heal` restaura vitalidade e `life` concede uma vida até `maxLives`. Casas são abertas com S+K quando o jogador está diante da porta. O salvamento automático registra cidade, checkpoint, vidas, fragmentos, casas e baús em `localStorage`. Para começar de novo, use `RESETAR PROGRESSO` dentro de SETTINGS; o menu principal não é alterado.
+`fragment` aumenta fragmentos, `heal` restaura vitalidade, `rage` carrega a barra e `life` concede uma vida até `maxLives`. Drops aparecem ao derrotar inimigos conforme `dropChance`. O salvamento automático registra arena, checkpoint, vidas, fragmentos e caches em `localStorage`. Para começar de novo, use `RESETAR PROGRESSO` dentro de SETTINGS; o menu principal não é alterado.
 
 ## Boss da onda 50
 
@@ -129,7 +134,7 @@ boss: {
 
 ## QA local
 
-Use `?debugcity=1` para testar a cidade sem percorrer a cinematics ou combater todas as ondas. No console, `SOD_DEBUG.state()` mostra cidade, vidas, fragmentos, baús, portão e storage; `moveToChest(id)`, `openChest()`, `moveToHouse(id)`, `exorciseHouse()`, `clearCity()`, `advanceCity()`, `loseLife()`, `save()` e `reset()` aceleram os casos de teste. Use `?debugboss=1` para a Bruxa da onda 50.
+Use `?debugcity=1` para testar a arena sem percorrer a cinematics ou combater todas as ondas. No console, `SOD_DEBUG.state()` mostra cidade, vidas, fragmentos, fúria, caches, portão e storage; `moveToChest(id)`, `openChest()`, `clearCity()`, `advanceCity()`, `loseLife()`, `fillRage()`, `save()` e `reset()` aceleram os casos de teste. Use `?debugboss=1` para a Bruxa da onda 50.
 
 ## O que não editar
 

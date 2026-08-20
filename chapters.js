@@ -6,7 +6,7 @@
  * O motor em index.html lê SOD_CONTENT e permanece genérico.
  */
 window.SOD_CONTENT = {
-  version: '4.0.0',
+  version: '5.0.0',
   activeChapter: 1,
 
   audio: {
@@ -24,11 +24,11 @@ window.SOD_CONTENT = {
   },
 
   assets: {
-    playerSheet: './assets/player-01-reaper-sheet.png',
-    soulSheet: './assets/enemy-01-soul-sheet.png',
-    shadeSheet: './assets/enemy-02-shade-sheet.png',
-    harbingerSheet: './assets/enemy-03-harbinger-sheet.png',
-    witchBossSheet: './assets/boss-01-witch-sheet.png',
+    playerSheet: './assets/player-01-reaper-sheet-clean.png',
+    soulSheet: './assets/enemy-01-soul-sheet-clean.png',
+    shadeSheet: './assets/enemy-02-shade-sheet-clean.png',
+    harbingerSheet: './assets/enemy-03-harbinger-sheet-clean.png',
+    witchBossSheet: './assets/boss-01-witch-sheet-clean.png',
     chapter1World: './assets/world-01-stage.png',
     chapter2World: './assets/world-02-city-under-veil.png',
     bossWorld: './assets/world-03-witch-arena.png'
@@ -119,18 +119,36 @@ window.SOD_CONTENT = {
     maxLives: 9,
     startingFragments: 0,
     autoSaveDelay: 0.55,
-    saveKey: 'sod_progress_v4',
-    cityWidth: 1700,
-    gateX: 1460,
-    houseCount: 4,
-    chestCount: 3,
-    chestSpacing: 330,
+    saveKey: 'sod_progress_v5',
+    cityWidth: 1900,
+    gateX: 1660,
+    chestCount: 4,
+    chestSpacing: 360,
+    crystalCount: 4,
+    dropChance: 0.36,
+    dropRewards: ['fragment', 'heal', 'rage'],
     cityNames: [
-      'CIDADE DO SINO MUDO', 'VILA DOS OSSOS', 'BAIRRO DA LUA VERMELHA',
-      'CIDADE DAS JANELAS VAZIAS', 'PORTO DO VÉU', 'DISTRITO DOS ENFORCADOS'
+      'ARENA DO SINO MUDO', 'CATACUMBAS DA LUA', 'CAPELA AFOGADA',
+      'CÂNION DAS CINZAS', 'PÁTIO DO VÉU', 'RUÍNAS DO ÚLTIMO RITUAL'
     ],
-    chestRewards: ['fragment', 'heal', 'life', 'fragment', 'fragment', 'life'],
+    scenarioCycle: [
+      './assets/world-01-stage.png', './assets/arena-crystal-reference.png',
+      './assets/world-02-city-under-veil.png', './assets/world-03-witch-arena.png'
+    ],
+    chestRewards: ['fragment', 'heal', 'rage', 'life', 'fragment', 'rage'],
     fragmentGoalPerCity: 3
+  },
+
+  rage: {
+    max: 100,
+    gainPerKill: 28,
+    gainPerHit: 5,
+    activationThreshold: 100,
+    duration: 11,
+    damageMultiplier: 1.45,
+    sizeMultiplier: 1.32,
+    scytheMultiplier: 1.65,
+    cinematicIn: 1.15
   },
 
   chapters: {
@@ -140,13 +158,13 @@ window.SOD_CONTENT = {
       subtitle: 'O CEMITÉRIO QUE RESPIRA',
       objective: 'AS ALMAS FUGITIVAS\\nDEVOLVA-AS AO SILÊNCIO',
       worldWidth: 1700,
-      cityMap: {
-        cityCount: 50,
-        houseCount: 4,
-        chestCount: 3,
-        gateX: 1460,
-        backgroundStyle: 'ghost-city'
-      },
+          cityMap: {
+            cityCount: 50,
+                    chestCount: 4,
+            crystalCount: 4,
+            gateX: 1660,
+            backgroundStyle: 'crystal-arena'
+          },
       world: {
         background: './assets/world-01-stage.png',
         accent: '#ff3048',
@@ -175,10 +193,10 @@ window.SOD_CONTENT = {
         spawnGap: 175,
         intermission: 1.65,
         variants: [
-          { id: 'wisp', every: 1, hp: 1, speed: 82, damage: 9, size: 1, color: '#9deaff', sheet: './assets/enemy-01-soul-sheet.png', weight: 6 },
-          { id: 'shade', every: 3, hp: 2, speed: 112, damage: 12, size: 1.1, color: '#d39cff', sheet: './assets/enemy-02-shade-sheet.png', weight: 3 },
-          { id: 'soul', every: 5, hp: 3, speed: 62, damage: 16, size: 1.2, color: '#ff7282', sheet: './assets/enemy-01-soul-sheet.png', weight: 2 },
-          { id: 'harbinger', every: 10, hp: 5, speed: 48, damage: 20, size: 1.42, color: '#ff3048', sheet: './assets/enemy-03-harbinger-sheet.png', weight: 1 }
+          { id: 'wisp', every: 1, hp: 1, speed: 82, damage: 9, size: 1, color: '#9deaff', sheet: './assets/enemy-01-soul-sheet-clean.png', weight: 6 },
+          { id: 'shade', every: 3, hp: 2, speed: 112, damage: 12, size: 1.1, color: '#d39cff', sheet: './assets/enemy-02-shade-sheet-clean.png', weight: 3 },
+          { id: 'soul', every: 5, hp: 3, speed: 62, damage: 16, size: 1.2, color: '#ff7282', sheet: './assets/enemy-01-soul-sheet-clean.png', weight: 2 },
+          { id: 'harbinger', every: 10, hp: 5, speed: 48, damage: 20, size: 1.42, color: '#ff3048', sheet: './assets/enemy-03-harbinger-sheet-clean.png', weight: 1 }
         ]
       },
       boss: {
@@ -186,7 +204,7 @@ window.SOD_CONTENT = {
         id: 'witch',
         name: 'A BRUXA DO VÉU',
         title: 'GUARDIÃ DAS CINZAS',
-        sheet: './assets/boss-01-witch-sheet.png',
+        sheet: './assets/boss-01-witch-sheet-clean.png',
         hp: 420,
         maxHp: 420,
         size: 2.05,

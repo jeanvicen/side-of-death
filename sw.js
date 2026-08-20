@@ -1,4 +1,4 @@
-const CACHE_NAME = 'side-of-death-v9';
+const CACHE_NAME = 'side-of-death-v10';
 const APP_SHELL = [
   './',
   './index.html',
@@ -27,11 +27,12 @@ const APP_SHELL = [
   './assets/world-01-foreground.png',
   './assets/world-02-city-under-veil.png',
   './assets/card-01-chapter.png',
-  './assets/player-01-reaper-sheet.png',
-  './assets/enemy-01-soul-sheet.png',
-  './assets/enemy-02-shade-sheet.png',
-  './assets/enemy-03-harbinger-sheet.png',
-  './assets/boss-01-witch-sheet.png',
+  './assets/player-01-reaper-sheet-clean.png',
+  './assets/enemy-01-soul-sheet-clean.png',
+  './assets/enemy-02-shade-sheet-clean.png',
+  './assets/enemy-03-harbinger-sheet-clean.png',
+  './assets/boss-01-witch-sheet-clean.png',
+  './assets/arena-crystal-reference.png',
   './assets/world-03-witch-arena.png',
   './assets/fx-01-combat-effects.png',
   './fonts/press-start-2p.css',
