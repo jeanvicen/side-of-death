@@ -40,7 +40,16 @@ npm run cap:open:android
 
 Para testar em um aparelho ou emulador, use o Android Studio. Para distribuição, configure no Android Studio o `applicationId` `com.klipzastudio.sideofdeath`, o nome `SIDE OF DEATH`, o ícone adaptativo e uma chave de assinatura privada. A configuração Capacitor está orientada para `AAB`, que é o formato recomendado para a Google Play; um APK pode ser gerado para testes ou distribuição fora da loja alterando temporariamente `releaseType` para `APK` ou usando as tarefas de build do Android Studio.
 
-A chave de assinatura não fica no repositório. Ela deve ser criada e armazenada pelo responsável pela conta Google Play. Perder essa chave pode impedir atualizações futuras do aplicativo.
+Uma chave de upload foi gerada para esta entrega. O keystore e o arquivo de credenciais são entregues separadamente e **não foram enviados ao GitHub**. O arquivo local ignorado `android/keystore.properties` aponta para o keystore e configura automaticamente o `release` do Gradle. Para recompilar depois de copiar o keystore para um novo computador, preencha esse arquivo conforme `android/keystore.properties.example` e execute:
+
+```bash
+npm run build
+npx cap sync android
+cd android
+./gradlew bundleRelease
+```
+
+Não altere o alias nem perca a senha do keystore. A mesma chave de upload deve ser preservada para as próximas atualizações do aplicativo. No primeiro envio, ative o Google Play App Signing no Play Console e use o AAB assinado entregue nesta tarefa.
 
 ## iOS: projeto para App Store
 
@@ -65,7 +74,7 @@ A faixa não foi substituída; apenas foi armazenada localmente para o jogo toca
 
 ## Limitações de publicação
 
-A configuração deixa o projeto pronto para ser aberto e compilado nas ferramentas oficiais, mas nenhuma conta de loja, certificado de assinatura, chave privada, perfil de provisionamento ou aceite de termos pode ser criado automaticamente dentro deste repositório. A publicação efetiva exige esses dados do proprietário e a revisão de cada loja.
+A configuração deixa o projeto pronto para ser aberto e compilado nas ferramentas oficiais. A chave de upload desta entrega foi gerada localmente e não está no repositório; a publicação efetiva ainda exige a conta do proprietário, ativação do Play App Signing, preenchimento dos dados da loja, screenshots, classificação etária, declaração de segurança de dados e revisão da Google Play.
 
 ## Referências
 

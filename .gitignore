@@ -11,3 +11,4 @@ ios/App/build/
 *.keystore
 *.jks
 *.p12
+android/keystore.properties
