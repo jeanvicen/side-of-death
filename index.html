@@ -15,12 +15,14 @@
 <link rel="stylesheet" href="fonts/press-start-2p.css">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-  html,body{width:100%;height:100%;min-height:100%;height:100dvh;background:#000;overflow:hidden}
+  html,body{width:100%;height:100%;min-height:100%;height:100dvh;background:#000;overflow:hidden;-webkit-touch-callout:none}
   body{
     font-family:'Press Start 2P','Courier New',monospace;
     cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, crosshair;
     touch-action:manipulation;
+    -webkit-touch-callout:none;
   }
+  img,canvas,svg{-webkit-touch-callout:none;-webkit-user-drag:none}
   button{font-family:inherit;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, pointer;outline:none;border:0}
 
   #stage{position:fixed;inset:0;width:100%;height:100dvh;min-height:100%;overflow:hidden;background:#050208}
@@ -31,8 +33,8 @@
     75%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}
   }
 
-  #bgWrap{position:absolute;inset:-4%;z-index:1;will-change:transform}
-  #bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;filter:brightness(.9) saturate(1.08);opacity:0;transition:opacity 1.6s ease}
+  #bgWrap{position:absolute;inset:-4%;z-index:1;will-change:transform;pointer-events:none;touch-action:none}
+  #bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;filter:brightness(.9) saturate(1.08);opacity:0;transition:opacity 1.6s ease;pointer-events:none;touch-action:none}
   #bg.ready{opacity:1}
 
   .fog{position:absolute;left:0;right:0;pointer-events:none;z-index:2;filter:blur(3px)}
@@ -52,7 +54,7 @@
   #stage.in #reaperFloat{animation:rRise 1.15s ease-out .15s backwards, rFloat 5s ease-in-out 1.7s infinite}
   @keyframes rRise{from{opacity:0;translate:0 9vh}to{opacity:1;translate:0 0}}
   @keyframes rFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-  #reaper,#reaperFallback{display:none;height:min(80vh,760px);width:auto;image-rendering:pixelated}
+  #reaper,#reaperFallback{display:none;height:min(80vh,760px);width:auto;image-rendering:pixelated;pointer-events:none;touch-action:none}
   #reaper.ready,#reaperFallback.ready{display:block;animation:aura 3.6s ease-in-out infinite}
   #reaperFallback{mix-blend-mode:screen}
   @keyframes aura{
@@ -160,6 +162,15 @@
   #flash{position:fixed;inset:0;background:#ff1030;opacity:0;pointer-events:none;z-index:46}
   #flash.go{animation:flashA .5s ease-out}
   @keyframes flashA{0%{opacity:.5}100%{opacity:0}}
+  #bloodBurst{position:fixed;inset:0;z-index:47;pointer-events:none;display:none;overflow:hidden;background:radial-gradient(ellipse at center,rgba(255,80,80,.92) 0%,rgba(150,0,18,.98) 48%,#1c0008 100%)}
+  #bloodBurst::before{content:'';position:absolute;inset:-18%;background:radial-gradient(ellipse at 18% 28%,transparent 0 5%,rgba(255,20,42,.9) 6% 8%,transparent 9%),radial-gradient(ellipse at 82% 22%,transparent 0 4%,rgba(120,0,18,.95) 5% 9%,transparent 10%),radial-gradient(ellipse at 52% 72%,transparent 0 8%,rgba(85,0,12,.98) 9% 18%,transparent 19%),radial-gradient(ellipse at 8% 88%,rgba(255,60,65,.8) 0 3%,transparent 4%),radial-gradient(ellipse at 92% 82%,rgba(255,30,48,.75) 0 4%,transparent 5%);filter:blur(2px);transform:scale(.6);opacity:0}
+  #bloodBurst::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 3%,rgba(255,8,30,.13) 3.3% 3.6%),linear-gradient(120deg,transparent 0 42%,rgba(255,190,190,.2) 44%,transparent 47%);mix-blend-mode:screen;opacity:0}
+  #bloodBurst.go{display:block;animation:bloodFade .95s steps(10) forwards}
+  #bloodBurst.go::before{animation:bloodSpread .42s cubic-bezier(.2,.8,.2,1) forwards}
+  #bloodBurst.go::after{animation:bloodGlint .35s ease-out forwards}
+  @keyframes bloodSpread{0%{transform:scale(.6);opacity:0}22%{opacity:1}100%{transform:scale(1.1);opacity:.95}}
+  @keyframes bloodGlint{0%{opacity:.8;transform:translateX(-8%)}100%{opacity:0;transform:translateX(8%)}}
+  @keyframes bloodFade{0%,55%{opacity:1}100%{opacity:0}}
   #slashFx{position:fixed;inset:0;z-index:48;pointer-events:none;overflow:hidden;display:none}
   #slashFx.go{display:block}
   #slashFx i{position:absolute;left:-30%;top:44%;width:160%;height:5px;--rot:-24deg;
@@ -189,19 +200,6 @@
   #soonOverlay .skull{image-rendering:pixelated;animation:skullBob 2s steps(2) infinite}
   @keyframes skullBob{0%,100%{translate:0 0}50%{translate:0 3px}}
 
-  #installPrompt{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));z-index:90;width:min(520px,calc(100vw - 28px));display:flex;align-items:center;gap:14px;padding:14px 14px 14px 18px;background:linear-gradient(135deg,rgba(24,4,10,.98),rgba(8,2,5,.98));border:3px solid #5b0d19;box-shadow:inset 0 0 0 2px #170307,0 0 0 2px #000,0 0 26px rgba(255,17,40,.32);transform:translate(-50%,140%);opacity:0;pointer-events:none;transition:transform .3s steps(4),opacity .3s ease}
-  #installPrompt::before{content:'';position:absolute;left:10%;right:38%;top:-4px;height:5px;background:#d90429;box-shadow:0 0 12px #ff1128}
-  #installPrompt.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
-  #installPrompt[hidden]{display:none}
-  #installPrompt .install-mark{width:36px;height:42px;flex:0 0 36px;position:relative;background:#160a0d;box-shadow:inset 0 0 0 3px #3d0c14}
-  #installPrompt .install-mark::before{content:'✚';position:absolute;inset:0;display:grid;place-items:center;color:#ff2233;font-size:20px;text-shadow:0 0 12px #ff0030}
-  #installPrompt .install-copy{flex:1;min-width:0;color:#d8cfc1;font-size:9px;line-height:1.8;letter-spacing:.08em}
-  #installPrompt .install-copy b{display:block;color:#ff3345;font-size:10px;letter-spacing:.12em}
-  #installPrompt .install-action,#installPrompt .install-dismiss{font-family:inherit;white-space:nowrap;font-size:8px;letter-spacing:.08em;padding:12px 10px;color:#f3e9db;background:#350914;box-shadow:inset 0 0 0 2px #a30b21,0 3px 0 #000}
-  #installPrompt .install-action:hover,#installPrompt .install-action:focus{background:#650d1b;color:#fff}
-  #installPrompt .install-dismiss{padding:8px 4px;color:#9f9283;background:transparent;box-shadow:none}
-  #installPrompt .install-dismiss:hover,#installPrompt .install-dismiss:focus{color:#fff}
-
   #crt{position:fixed;inset:0;z-index:60;pointer-events:none;
     background:
       repeating-linear-gradient(0deg,rgba(0,0,0,.24) 0 1px,transparent 1px 3px),
@@ -221,23 +219,12 @@
     #reaper,#reaperFallback{height:min(78vh,600px)}
     #menuButtons{gap:16px;margin-top:clamp(30px,7vh,74px)}
     .mbtn{min-width:min(320px,42vw);padding:15px 34px}
-    #installPrompt{width:min(560px,calc(100vw - 24px));padding:11px 12px 11px 14px}
-    #installPrompt .install-copy{font-size:8px;line-height:1.6}
-    #installPrompt .install-copy b{font-size:9px}
-    #installPrompt .install-action{font-size:7px;padding:10px 9px}
   }
   @media (orientation:portrait){
     #rotateNotice{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:radial-gradient(circle at center,#3b0712 0,#090207 55%,#000 100%);color:#f2ecdf;text-align:center;padding:28px;letter-spacing:.16em}
     #rotateNotice::before{content:'↔';font-family:Arial,sans-serif;font-size:76px;line-height:1;color:#ff2233;text-shadow:0 0 24px #ff0030;animation:rotatePhone 1.4s steps(2) infinite}
     #rotateNotice b{font-size:clamp(15px,5vw,24px);color:#ff3345;text-shadow:3px 3px 0 #280008}
     #rotateNotice span{font-size:clamp(8px,2.8vw,12px);line-height:2;color:#cfc7b8}
-    #installPrompt{display:flex!important;z-index:130;width:calc(100vw - 20px);gap:8px;padding:11px 9px 11px 11px}
-    #installPrompt .install-mark{width:30px;height:36px;flex-basis:30px}
-    #installPrompt .install-mark::before{font-size:16px}
-    #installPrompt .install-copy{font-size:7px;line-height:1.65}
-    #installPrompt .install-copy b{font-size:8px}
-    #installPrompt .install-action{font-size:7px;padding:10px 7px}
-    #installPrompt .install-dismiss{font-size:7px}
   }
   @keyframes rotatePhone{50%{transform:rotate(90deg)}}
 </style>
@@ -284,6 +271,7 @@
 </div>
 
 <div id="flash"></div>
+<div id="bloodBurst" aria-hidden="true"></div>
 <div id="slashFx"><i></i><i></i></div>
 
 <div id="settingsModal" class="overlay">
@@ -332,18 +320,16 @@
   <div id="skipHint">CLIQUE PARA PULAR</div>
 </div>
 
-<div id="installPrompt" role="dialog" aria-live="polite" aria-label="Instalar SIDE OF DEATH">
-  <span class="install-mark" aria-hidden="true"></span>
-  <span class="install-copy"><b>INSTALAR SIDE OF DEATH</b>Jogue em tela cheia, com sangue e som.</span>
-  <button class="install-action" id="btnInstall" type="button">INSTALAR</button>
-  <button class="install-dismiss" id="btnDismissInstall" type="button" aria-label="Fechar aviso">×</button>
-</div>
 
 <div id="crt"></div>
 
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s);
+const stopTouchMenu=e=>e.preventDefault();
+document.addEventListener('contextmenu',stopTouchMenu,{capture:true});
+document.addEventListener('dragstart',stopTouchMenu,{capture:true});
+document.addEventListener('selectstart',stopTouchMenu,{capture:true});
 const BG_URL='./assets/background.png';
 const REAPER_URL='./assets/reaper.png';
 
@@ -449,6 +435,7 @@ const SFX={
   hover(){if(SETTINGS.sfx)tone(540,540,.045,'square',.05)},
   ok(){if(!SETTINGS.sfx)return;tone(660,660,.07,'square',.09);tone(990,990,.1,'square',.09,.07)},
   back(){if(SETTINGS.sfx)tone(320,170,.14,'square',.09)},
+  gun(){if(!SETTINGS.sfx)return;noiseHit(.07,.72,1900,.8);tone(150,42,.28,'sawtooth',.56,.004);tone(62,28,.34,'sine',.48,.012);tone(1750,480,.09,'square',.16,.006)},
   boom(){if(!SETTINGS.sfx)return;tone(130,36,.55,'sine',.55);noiseHit(.35,.3,220,.8);tone(82,40,.4,'sawtooth',.2,.02)},
   slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.32,2400,1.2);tone(900,110,.22,'sawtooth',.15)},
   toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)},
@@ -502,34 +489,8 @@ function applySettings(){
 }
 
 /* ================= APP / TELA CHEIA ================= */
-const installEl=$('#installPrompt');
-const installBtn=$('#btnInstall');
-const dismissInstallBtn=$('#btnDismissInstall');
-let deferredInstallPrompt=null;
-let installFallbackTimer=null;
-
 function isStandalone(){
   return window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.navigator.standalone === true;
-}
-function sessionFlag(key){try{return sessionStorage.getItem(key)==='1'}catch(e){return false}}
-function setSessionFlag(key){try{sessionStorage.setItem(key,'1')}catch(e){}}
-let installDismissed=false;
-if(isStandalone()){
-  installDismissed=true;
-  installEl.hidden=true;
-}else{
-  installEl.hidden=false;
-  requestAnimationFrame(()=>installEl.classList.add('show'));
-}
-function showInstallPrompt(){
-  if(isStandalone() || installDismissed)return;
-  installEl.hidden=false;
-  requestAnimationFrame(()=>installEl.classList.add('show'));
-}
-function hideInstallPrompt(){
-  installDismissed=true;
-  installEl.classList.remove('show');
-  setTimeout(()=>{installEl.hidden=true},320);
 }
 async function enterImmersive(){
   try{
@@ -541,26 +502,6 @@ async function enterImmersive(){
     if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
   }catch(e){}
 }
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  deferredInstallPrompt=e;
-  installBtn.textContent='INSTALAR';
-  showInstallPrompt();
-});
-window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;hideInstallPrompt()});
-installBtn.addEventListener('click',async()=>{
-  gestureInit();
-  if(!deferredInstallPrompt){
-    installBtn.textContent='VEJA O MENU';
-    installEl.querySelector('.install-copy').innerHTML='<b>INSTALAÇÃO MANUAL</b>Abra o menu do navegador e escolha “Instalar app” ou “Adicionar à tela inicial”.';
-    return;
-  }
-  const promptEvent=deferredInstallPrompt;
-  deferredInstallPrompt=null;
-  await promptEvent.prompt();
-  hideInstallPrompt();
-});
-dismissInstallBtn.addEventListener('click',hideInstallPrompt);
 
 let audioReady=false;
 function gestureInit(){
@@ -593,7 +534,6 @@ function handleFirstGesture(e){
 }
 document.addEventListener('pointerdown', handleFirstGesture);
 document.addEventListener('keydown', handleFirstGesture);
-if(!isStandalone()) installFallbackTimer=setTimeout(showInstallPrompt,1700);
 
 /* ================= CENÁRIO / CEIFADOR ================= */
 const bg=$('#bg');bg.src=BG_URL;
@@ -739,6 +679,14 @@ let menuActive=false,focused=0,menuTimers=[],playing=false;
 const btnList=()=>[$('#btnPlay'),$('#btnSettings')];
 function setFocus(i){focused=i;btnList().forEach((b,j)=>b.classList.toggle('focused',j===i))}
 function flashRed(){const f=$('#flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+const bloodBurst=$('#bloodBurst');
+function triggerBlood(){
+  if(!SETTINGS.blood)return;
+  bloodBurst.classList.remove('go');
+  void bloodBurst.offsetWidth;
+  bloodBurst.classList.add('go');
+  setTimeout(()=>bloodBurst.classList.remove('go'),1050);
+}
 function enterMenu(){
   menuTimers.forEach(clearTimeout);menuTimers=[];
   const st=$('#stage');
@@ -748,7 +696,6 @@ function enterMenu(){
   void st.offsetWidth;
   menuActive=true;setFocus(0);
   st.classList.add('in');
-  menuTimers.push(setTimeout(()=>{if(!isStandalone())showInstallPrompt()},420));
   menuTimers.push(setTimeout(()=>{st.classList.add('shaking');flashRed();SFX.boom()},1080));
   menuTimers.push(setTimeout(()=>st.classList.remove('shaking'),1560));
   menuTimers.push(setTimeout(startDrips,1700));
@@ -775,6 +722,8 @@ setInterval(()=>{
 function playSequence(){
   if(playing)return;playing=true;menuActive=false;
   stopMusic();
+  SFX.gun();
+  triggerBlood();
   $('#slashFx').classList.add('go');SFX.slash();flashRed();
   stage.classList.add('shaking');
   setTimeout(()=>stage.classList.remove('shaking'),460);
@@ -789,12 +738,12 @@ function refreshRows(){
     v.classList.toggle('on',SETTINGS[r.dataset.key]);
   });
 }
-$('#btnPlay').addEventListener('click',e=>{e.currentTarget.blur();SFX.ok();playSequence()});
-$('#btnSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.ok();openSettings()});
-$('#btnCloseSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.back();closeSettings()});
-$('#btnBackSoon').addEventListener('click',e=>{e.currentTarget.blur();SFX.back();closeSoon()});
+$('#btnPlay').addEventListener('click',e=>{e.currentTarget.blur();SFX.gun();playSequence()});
+$('#btnSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.gun();openSettings()});
+$('#btnCloseSettings').addEventListener('click',e=>{e.currentTarget.blur();SFX.gun();closeSettings()});
+$('#btnBackSoon').addEventListener('click',e=>{e.currentTarget.blur();SFX.gun();closeSoon()});
 $('#btnReintro').addEventListener('click',e=>{
-  e.currentTarget.blur();SFX.ok();closeSettings();
+  e.currentTarget.blur();SFX.gun();closeSettings();
   menuActive=false;stopDrips();stopMusic();
   stage.classList.remove('in','shaking');
   introDone=false;runIntro();
@@ -802,7 +751,7 @@ $('#btnReintro').addEventListener('click',e=>{
 document.querySelectorAll('.row[data-key]').forEach(r=>{
   r.addEventListener('mouseenter',()=>SFX.hover());
   r.addEventListener('click',()=>{
-    const k=r.dataset.key;SETTINGS[k]=!SETTINGS[k];saveSettings();applySettings();SFX.toggle();refreshRows();
+    const k=r.dataset.key;SETTINGS[k]=!SETTINGS[k];saveSettings();applySettings();SFX.gun();refreshRows();
     if(k==='music'){
       if(AC){
         if(SETTINGS.music && menuActive && musicLoaded){
