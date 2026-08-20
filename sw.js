@@ -1,4 +1,4 @@
-const CACHE_NAME = 'side-of-death-v4';
+const CACHE_NAME = 'side-of-death-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,6 +6,22 @@ const APP_SHELL = [
   './assets/background.png',
   './assets/reaper.png',
   './assets/metalmania.mp3',
+  './assets/intro-ost-90s.wav',
+  './assets/voice-cine-01.wav',
+  './assets/voice-cine-02.wav',
+  './assets/voice-cine-03.wav',
+  './assets/voice-cine-04.wav',
+  './assets/voice-cine-05.wav',
+  './assets/voice-cine-06.wav',
+  './assets/cinematic_ref.png',
+  './assets/cine-01-cemetery.png',
+  './assets/cine-02-fugitive-souls.png',
+  './assets/cine-03-portal.png',
+  './assets/world-01-stage.png',
+  './assets/card-01-chapter.png',
+  './assets/player-01-reaper-sheet.png',
+  './assets/enemy-01-soul-sheet.png',
+  './assets/fx-01-combat-effects.png',
   './fonts/press-start-2p.css',
   './fonts/files/press-start-2p-latin-400-normal.woff2',
   './icons/icon-192.png',
