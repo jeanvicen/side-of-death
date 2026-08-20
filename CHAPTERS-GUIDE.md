@@ -53,6 +53,22 @@ git push origin main
 }
 ```
 
+## Cinematics e vozes
+
+Cada objeto de `intro` pode usar `label`, `image`, `caption`, `voice`, `duration`, `effect` e `particles`. O índice `voice` aponta para `audio.voices`. Para evitar cortes, mantenha em `audio.voiceDurations` a duração real de cada WAV em segundos e use `audio.holdAfterVoice` para definir o respiro final. O motor usa a maior duração entre o campo da cena e a duração medida da voz mais o respiro; portanto, não reduza `duration` abaixo do tamanho da fala. A troca de plano usa crossfade entre dois layers, com pan/zoom, letterbox, partículas e barra de progresso.
+
+Exemplo de áudio editável:
+
+```js
+audio: {
+  voices: ['./assets/voice-cine-01.wav'],
+  voiceDurations: [15.68],
+  holdAfterVoice: 1.65
+}
+```
+
+A versão web não chama `requestFullscreen`, pois o navegador mostra uma mensagem própria de orientação quando o faz. A experiência continua horizontal; no Capacitor, Android/iOS mantêm landscape pelo wrapper nativo. Para atualizar o cache dos celulares, aumente `CACHE_NAME` em `sw.js` quando adicionar uma versão relevante.
+
 ## NPC novo
 
 `every` indica a primeira onda em que o NPC aparece. `weight` altera a frequência. `sheet` aponta para a folha 4×2 transparente. Os poderes são definidos por `enemyAI.behaviors` usando o mesmo `id`.

@@ -4,7 +4,7 @@
 
 O projeto agora funciona como uma aplicação web instalável (PWA) e possui configuração Capacitor para gerar o projeto Android e o projeto iOS a partir da mesma pasta `www`. O HTML continua sendo o motor visual principal e o menu original não foi remodelado. O conteúdo de capítulos, cenas, falas, assets, configurações de física e composição das ondas fica centralizado em `chapters.js`; consulte `CHAPTERS-GUIDE.md` antes de criar novas fases.
 
-O projeto possui manifesto, ícones e `display: standalone` para permitir instalação pelo fluxo nativo do navegador quando o usuário escolher essa opção. **Nenhum painel ou aviso de instalação é exibido dentro do jogo.** O jogo foi configurado para **orientação horizontal/deitada** no PWA, Android e iOS; se o aparelho estiver em pé, aparece uma instrução para girá-lo. No iOS, a instalação pelo navegador segue o fluxo de “Adicionar à Tela de Início” do Safari/Chrome.
+O projeto possui manifesto, ícones e `display: standalone` para permitir instalação pelo fluxo nativo do navegador quando o usuário escolher essa opção. **Nenhum painel ou aviso de instalação é exibido dentro do jogo.** A versão web também não chama `requestFullscreen`, evitando a bolha do navegador que instrui o usuário a arrastar para sair da tela cheia. O jogo foi configurado para **orientação horizontal/deitada** no PWA, Android e iOS; se o aparelho estiver em pé, aparece uma instrução para girá-lo. No iOS, a instalação pelo navegador segue o fluxo de “Adicionar à Tela de Início” do Safari/Chrome.
 
 ## Rodar localmente
 
@@ -66,7 +66,7 @@ No Xcode, selecione o time de desenvolvimento, confirme o Bundle Identifier `com
 
 ## Atualização por capítulos
 
-Edite `chapters.js` para trocar textos, cenas, vozes, cenários, variantes de NPC e o número de ondas. O Capítulo 1 está configurado com 50 ondas; ao concluir a última, o jogo exibe `PRÓXIMO CAPÍTULO` e carrega o cenário definido no próximo objeto de `SOD_CONTENT.chapters`. Depois de qualquer alteração, execute `npm run build` e, para pacotes nativos, `npx cap sync`.
+Edite `chapters.js` para trocar textos, cenas, vozes, cenários, variantes de NPC e o número de ondas. Para cenas com narração, atualize também `audio.voiceDurations` com a duração real dos WAVs e mantenha `audio.holdAfterVoice` como margem de respiro; o motor nunca troca de plano antes do fim da voz. O Capítulo 1 está configurado com 50 ondas; ao concluir a última, o jogo exibe `PRÓXIMO CAPÍTULO` e carrega o cenário definido no próximo objeto de `SOD_CONTENT.chapters`. Depois de qualquer alteração, execute `npm run build` e, para pacotes nativos, `npx cap sync`.
 
 ## Créditos da música
 

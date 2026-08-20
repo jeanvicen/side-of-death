@@ -220,9 +220,12 @@
   @keyframes cineIn{from{opacity:0}to{opacity:1}}
   @keyframes cineOut{to{opacity:0;transform:scale(1.03)}}
   .cineFrame{position:relative;width:100vw;height:100vh;overflow:hidden;background:#030203;isolation:isolate}
-  .cineShot{position:absolute;inset:-5%;background:#050208 center/cover no-repeat;image-rendering:pixelated;filter:brightness(.88) saturate(1.12);transform:scale(1.04);transition:background-image .2s ease,opacity .45s ease,transform 9s ease-out;opacity:0}
-  #cinematic.show .cineShot{opacity:1;transform:scale(1.1)}
-  .cineShot.cut{animation:cineCut .42s steps(5) both,cineDrift var(--cine-duration,10s) ease-out both}
+  .cineShot{position:absolute;inset:-5%;background:#050208 center/cover no-repeat;image-rendering:pixelated;filter:brightness(.88) saturate(1.12);transform:scale(1.04);opacity:0;will-change:opacity,transform,filter}
+  .cineShot.active{opacity:1;z-index:1}
+  .cineShot.leaving{opacity:1;z-index:2;animation:cineLeave .9s ease-in forwards}
+  .cineShot.crossfade{animation:cineCross .95s ease-out both,cineDrift var(--cine-duration,10s) ease-out both}
+  @keyframes cineCross{0%{opacity:0;filter:brightness(1.55) saturate(1.45);transform:scale(1.065)}42%{opacity:1}100%{opacity:1;filter:brightness(.88) saturate(1.12)}}
+  @keyframes cineLeave{0%{opacity:1;filter:brightness(.88) saturate(1.12)}100%{opacity:0;filter:brightness(.45) saturate(.8)}}
   @keyframes cineCut{0%{opacity:.2;filter:brightness(1.8) saturate(1.4)}45%{opacity:1}100%{opacity:1;filter:brightness(.88) saturate(1.12)}}
   @keyframes cineDrift{0%{transform:scale(1.04) translate(var(--cine-from-x,0),var(--cine-from-y,0))}100%{transform:scale(1.13) translate(var(--cine-to-x,0),var(--cine-to-y,0))}}
   .cineFx{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;image-rendering:pixelated;mix-blend-mode:screen;opacity:.82}
@@ -236,6 +239,10 @@
   #cineCaption{position:absolute;left:8%;right:8%;bottom:13.5vh;z-index:5;min-height:42px;text-align:center;color:#f5efe4;font-family:'Press Start 2P','Courier New',monospace;font-size:clamp(9px,1.35vw,15px);line-height:2.05;letter-spacing:.08em;text-shadow:3px 3px 0 #000,0 0 18px rgba(0,0,0,.95);opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
   #cineCaption.on{opacity:1;transform:none}
   #cineBrand{position:absolute;top:12.5vh;left:7%;z-index:5;color:rgba(245,235,220,.6);font-size:clamp(7px,.85vw,11px);letter-spacing:.38em;text-shadow:2px 2px 0 #000}
+  #cineSceneTag{position:absolute;left:7%;bottom:22vh;z-index:5;color:rgba(255,190,198,.82);font-size:clamp(7px,.78vw,10px);letter-spacing:.2em;text-shadow:2px 2px 0 #000;opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease}
+  #cineSceneTag.on{opacity:1;transform:none}
+  #cineProgress{position:absolute;left:7%;right:7%;bottom:8.6vh;height:3px;background:rgba(255,230,226,.22);z-index:5;overflow:hidden;box-shadow:0 0 10px rgba(255,30,60,.25)}
+  #cineProgress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#8d1127,#ff3048,#ffd0b0);box-shadow:0 0 10px #ff3048;transform-origin:left center}
   #cineSkip{position:absolute;right:5%;bottom:4.5vh;z-index:6;background:rgba(9,3,6,.76);color:#aaa093;padding:10px 14px;font-size:8px;letter-spacing:.15em;box-shadow:inset 0 0 0 2px #3d0c14,0 4px 0 #000;opacity:.78}
   #cineSkip:hover,#cineSkip:focus{color:#fff;background:#3a0710;box-shadow:inset 0 0 0 2px #ff2233,0 4px 0 #000}
 
@@ -393,13 +400,16 @@
 
 <div id="cinematic" aria-hidden="true">
   <div class="cineFrame">
-    <div class="cineShot" id="cineShot"></div>
+    <div class="cineShot" id="cineShotA"></div>
+    <div class="cineShot" id="cineShotB"></div>
     <canvas class="cineFx" id="cineFx" width="1280" height="720"></canvas>
     <div class="cineAtmosphere" id="cineAtmosphere"></div>
     <div class="cineFog"></div>
     <div class="cineLetterbox top"></div><div class="cineLetterbox bottom"></div>
     <div id="cineBrand">KLIPZA STUDIO · SIDE OF DEATH</div>
+    <div id="cineSceneTag"></div>
     <div id="cineCaption"></div>
+    <div id="cineProgress"><i></i></div>
     <button id="cineSkip">PULAR INTRO</button>
   </div>
 </div>
@@ -604,11 +614,9 @@ function isStandalone(){
   return window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.navigator.standalone === true;
 }
 async function enterImmersive(){
-  try{
-    if(!document.fullscreenElement && document.documentElement.requestFullscreen){
-      await document.documentElement.requestFullscreen({navigationUI:'hide'});
-    }
-  }catch(e){}
+  // Não solicitar Fullscreen no navegador: o Chromium exibe uma bolha própria
+  // de instrução para sair da tela cheia, que não pode ser ocultada pelo site.
+  // Android/iOS nativos já forçam landscape pelo wrapper Capacitor.
   try{
     if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
   }catch(e){}
@@ -838,7 +846,8 @@ setInterval(()=>{
 },3800);
 
   /* ================= EXPANSÃO: INTRODUÇÃO CINEMATOGRÁFICA ================= */
-  const cinematicEl=$('#cinematic'),cineShotEl=$('#cineShot'),cineCaptionEl=$('#cineCaption'),cineSkipEl=$('#cineSkip');
+  const cinematicEl=$('#cinematic'),cineCaptionEl=$('#cineCaption'),cineSkipEl=$('#cineSkip'),cineSceneTagEl=$('#cineSceneTag'),cineProgressEl=$('#cineProgress i');
+  const cineShots=[$('#cineShotA'),$('#cineShotB')];
   const chapterEl=$('#chapterCard'),gameShellEl=$('#gameShell');
   const SOD=window.SOD_CONTENT||{activeChapter:1,audio:{introMusic:'./assets/intro-ost-90s.wav',voices:[]},defaults:{},chapters:{1:{title:'CAPÍTULO 1',subtitle:'O CEMITÉRIO QUE RESPIRA',objective:'AS ALMAS FUGITIVAS\\nDEVOLVA-AS AO SILÊNCIO',intro:[],waves:{total:50,variants:[]},world:{background:'./assets/world-01-stage.png'}}}};
   const activeChapter=SOD.chapters[SOD.activeChapter]||SOD.chapters[1];
@@ -847,37 +856,57 @@ setInterval(()=>{
   const ambienceEl=new Audio(SOD.audio.ambience||'./assets/cemetery-ambience.wav');
   ambienceEl.preload='auto';ambienceEl.loop=true;ambienceEl.volume=.32;
   const voiceClips=(SOD.audio.voices||[]).map(src=>{const a=new Audio(src);a.preload='auto';a.volume=.92;return a});
+  const voiceDurations=SOD.audio.voiceDurations||[];
+  const holdAfterVoice=Math.max(1.1,Number(SOD.audio.holdAfterVoice)||1.65);
   const cineScenes=activeChapter.intro||[];
   const cineFxEl=$('#cineFx'),cineFxCtx=cineFxEl.getContext('2d'),cineAtmosphereEl=$('#cineAtmosphere');
-  let cineTimers=[],cineIndex=0,cineActive=false,chapterTimer=null,cineFxRaf=0,cineFxClock=0,cineFxParticles=[];
+  let cineTimers=[],cineIndex=0,cineActive=false,chapterTimer=null,cineFxRaf=0,cineFxClock=0,cineFxParticles=[],cineShotSlot=0,cineProgressTimer=0;
   function resizeCineFx(){const dpr=Math.min(2,window.devicePixelRatio||1),w=cineFxEl.clientWidth||window.innerWidth,h=cineFxEl.clientHeight||window.innerHeight;cineFxEl.width=Math.floor(w*dpr);cineFxEl.height=Math.floor(h*dpr);cineFxCtx.setTransform(dpr,0,0,dpr,0,0)}
   function seedCineFx(kind){const w=cineFxEl.clientWidth||window.innerWidth,h=cineFxEl.clientHeight||window.innerHeight;const count=kind==='souls'?30:kind==='portal'?46:kind==='rain'?64:kind==='sparks'?42:kind==='embers'?34:24;cineFxParticles=Array.from({length:count},(_,i)=>({x:Math.random()*w,y:kind==='rain'?Math.random()*h:-10-Math.random()*h,vx:(Math.random()-.5)*(kind==='souls'?18:32),vy:kind==='rain'?45+Math.random()*90:-(4+Math.random()*18),size:1+Math.random()*(kind==='souls'?4:2.8),life:.35+Math.random()*.8,phase:Math.random()*Math.PI*2,kind,alpha:.25+Math.random()*.55}));}
   function renderCineFx(now){if(!cineActive){cineFxRaf=0;return}const w=cineFxEl.clientWidth||window.innerWidth,h=cineFxEl.clientHeight||window.innerHeight;const dt=Math.min(.05,(now-cineFxClock)/1000||.016);cineFxClock=now;cineFxCtx.clearRect(0,0,w,h);for(const p of cineFxParticles){p.x+=p.vx*dt+Math.sin(now*.0008+p.phase)*3*dt;p.y+=p.vy*dt;if(p.kind==='souls'){p.x+=Math.sin(now*.0015+p.phase)*14*dt;p.y-=9*dt}if(p.kind==='portal'){p.x+=Math.sin(now*.002+p.phase)*24*dt;p.y-=5*dt}if(p.y>h+20||p.x<-30||p.x>w+30){p.x=Math.random()*w;p.y=p.kind==='rain'?-10:h+Math.random()*40}const pulse=.55+.45*Math.sin(now*.002+p.phase);cineFxCtx.globalAlpha=p.alpha*pulse;cineFxCtx.fillStyle=p.kind==='souls'?'#a9eeff':p.kind==='portal'?'#8bdfff':p.kind==='sparks'?'#ff5367':p.kind==='rain'?'#7685b0':'#ffb38b';cineFxCtx.fillRect(p.x|0,p.y|0,Math.max(1,p.size|0),Math.max(1,(p.size*(p.kind==='rain'?3:1))|0));}cineFxCtx.globalAlpha=1;cineFxRaf=requestAnimationFrame(renderCineFx)}
   function startCineFx(kind){resizeCineFx();seedCineFx(kind||'mist');cancelAnimationFrame(cineFxRaf);cineFxClock=performance.now();cineFxRaf=requestAnimationFrame(renderCineFx)}
   function stopCineFx(){cancelAnimationFrame(cineFxRaf);cineFxRaf=0;cineFxParticles=[];cineFxCtx.clearRect(0,0,cineFxEl.clientWidth||window.innerWidth,cineFxEl.clientHeight||window.innerHeight)}
   window.addEventListener('resize',resizeCineFx,{passive:true});
-  function clearCineTimers(){cineTimers.forEach(clearTimeout);cineTimers=[]}
+  function clearCineTimers(){cineTimers.forEach(clearTimeout);cineTimers=[];clearInterval(cineProgressTimer);cineProgressTimer=0}
   function stopNarration(){voiceClips.forEach(a=>{a.pause();try{a.currentTime=0}catch(e){}})}
   function stopIntroMedia(){clearCineTimers();stopNarration();introMusicEl.pause();ambienceEl.pause();try{introMusicEl.currentTime=0;ambienceEl.currentTime=0}catch(e){}}
   function playCineVoice(index){const clip=voiceClips[index];if(!clip)return;clip.currentTime=0;const p=clip.play();if(p&&p.catch)p.catch(()=>{})}
+  function sceneDurationMs(scene){
+    const configured=Number(scene.duration)||0;
+    const measured=Number.isFinite(voiceDurations[scene.voice])?(voiceDurations[scene.voice]*1000)+(holdAfterVoice*1000):0;
+    return Math.max(configured,measured,4200);
+  }
   function showCineScene(index){
     if(!cineActive)return;
     if(index>=cineScenes.length){showChapterCard();return}
-    cineIndex=index;const scene=cineScenes[index];clearCineTimers();stopNarration();
-    cineShotEl.classList.remove('cut');void cineShotEl.offsetWidth;
-    cineShotEl.style.setProperty('--cine-duration',(scene.duration/1000)+'s');
-    cineShotEl.style.setProperty('--cine-from-x',(index%2?'1.2%':'-1.2%'));
-    cineShotEl.style.setProperty('--cine-to-x',(index%2?'-1.5%':'1.5%'));
-    cineShotEl.style.setProperty('--cine-from-y',(index%3?'0.7%':'-0.6%'));
-    cineShotEl.style.setProperty('--cine-to-y',(index%3?'-0.6%':'0.8%'));
-    cineShotEl.style.backgroundImage='url("'+(scene.image||scene.img)+'")';cineShotEl.classList.add('cut');
+    cineIndex=index;
+    const scene=cineScenes[index];
+    const duration=sceneDurationMs(scene);
+    clearCineTimers();stopNarration();
+    const nextShot=cineShots[cineShotSlot],previousShot=cineShots[1-cineShotSlot];
+    previousShot.classList.remove('leaving');
+    if(previousShot.style.backgroundImage)previousShot.classList.add('leaving');
+    nextShot.classList.remove('active','crossfade','leaving');void nextShot.offsetWidth;
+    nextShot.style.setProperty('--cine-duration',(duration/1000)+'s');
+    nextShot.style.setProperty('--cine-from-x',(index%2?'1.2%':'-1.2%'));
+    nextShot.style.setProperty('--cine-to-x',(index%2?'-1.5%':'1.5%'));
+    nextShot.style.setProperty('--cine-from-y',(index%3?'0.7%':'-0.6%'));
+    nextShot.style.setProperty('--cine-to-y',(index%3?'-0.6%':'0.8%'));
+    nextShot.style.backgroundImage='url("'+(scene.image||scene.img||'')+'")';
+    nextShot.classList.add('active','crossfade');
+    cineShotSlot=1-cineShotSlot;
     cineAtmosphereEl.className='cineAtmosphere effect-'+(scene.effect||'mist');
-    cineCaptionEl.classList.remove('on');cineCaptionEl.innerHTML=scene.caption.replace(/\\n/g,'<br>');
+    cineSceneTagEl.classList.remove('on');cineSceneTagEl.textContent=scene.label||('CENA '+String(index+1).padStart(2,'0'));
+    cineCaptionEl.classList.remove('on');cineCaptionEl.innerHTML=(scene.caption||'').replace(/\\n/g,'<br>');
+    cineProgressEl.style.transition='none';cineProgressEl.style.width='0%';void cineProgressEl.offsetWidth;
+    cineProgressEl.style.transition='width '+duration+'ms linear';cineProgressEl.style.width='100%';
     startCineFx(scene.particles||'mist');SFX.cine(scene.effect||'mist');
-    cineTimers.push(setTimeout(()=>cineCaptionEl.classList.add('on'),560));
+    const voiceSeconds=Number.isFinite(voiceDurations[scene.voice])?voiceDurations[scene.voice]:Math.max(0,(duration-1650)/1000);
+    const captionOut=Math.min(duration-300,Math.max(voiceSeconds*1000+980,2600));
+    cineTimers.push(setTimeout(()=>{cineCaptionEl.classList.add('on');cineSceneTagEl.classList.add('on')},480));
     cineTimers.push(setTimeout(()=>playCineVoice(scene.voice),700));
-    cineTimers.push(setTimeout(()=>cineCaptionEl.classList.remove('on'),Math.max(1100,scene.duration-920)));
-    cineTimers.push(setTimeout(()=>showCineScene(index+1),scene.duration));
+    cineTimers.push(setTimeout(()=>{cineCaptionEl.classList.remove('on');cineSceneTagEl.classList.remove('on')},captionOut));
+    cineTimers.push(setTimeout(()=>showCineScene(index+1),duration));
   }
   function startCinematic(){
     playing=true;menuActive=false;stopDrips();stopMusic();stopIntroMedia();cineActive=true;
@@ -887,7 +916,7 @@ setInterval(()=>{
     showCineScene(0);
   }
   function showChapterCard(){
-    if(!cineActive)return;clearCineTimers();stopNarration();stopCineFx();cineCaptionEl.classList.remove('on');
+    if(!cineActive)return;clearCineTimers();stopNarration();stopCineFx();cineCaptionEl.classList.remove('on');cineSceneTagEl.classList.remove('on');cineProgressEl.style.transition='none';cineProgressEl.style.width='0%';cineShots.forEach(s=>s.classList.remove('active','crossfade','leaving'));
     $('#chapterTitle').textContent=activeChapter.title||'CAPÍTULO 1';
     $('#chapterSub').textContent=activeChapter.subtitle||'O CEMITÉRIO QUE RESPIRA';
     cinematicEl.classList.remove('show');cinematicEl.classList.add('fadeOut');

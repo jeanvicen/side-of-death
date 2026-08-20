@@ -6,7 +6,7 @@
  * O motor em index.html lê SOD_CONTENT e permanece genérico.
  */
 window.SOD_CONTENT = {
-  version: '3.0.0',
+  version: '3.1.0',
   activeChapter: 1,
 
   audio: {
@@ -17,7 +17,10 @@ window.SOD_CONTENT = {
       './assets/voice-cine-03.wav', './assets/voice-cine-04.wav',
       './assets/voice-cine-05.wav', './assets/voice-cine-06.wav',
       './assets/voice-cine-07.wav', './assets/voice-cine-08.wav'
-    ]
+    ],
+    // Duração medida dos WAVs. O motor acrescenta holdAfterVoice para não cortar a fala.
+    voiceDurations: [15.68, 11.84, 14.08, 17.24, 9.80, 11.20, 9.88, 6.96],
+    holdAfterVoice: 1.65
   },
 
   assets: {
@@ -128,14 +131,14 @@ window.SOD_CONTENT = {
         bossBackground: './assets/world-03-witch-arena.png'
       },
       intro: [
-        { image: './assets/cine-01-cemetery.png', caption: 'Quando os sinos se calam, o cemitério ainda respira.\\nSob a lua vermelha, a fronteira entre os mundos começou a ceder.', voice: 0, duration: 10000, effect: 'wind-bells', particles: 'mist' },
-        { image: './assets/cine-02-fugitive-souls.png', caption: 'Uma a uma, as almas recusaram o chamado.\\nElas rasgaram o véu e correram para onde nenhuma sentença alcança.', voice: 1, duration: 10000, effect: 'whispers', particles: 'souls' },
-        { image: './assets/cine-02-fugitive-souls.png', caption: 'A Morte ouviu o primeiro grito antes mesmo que ele nascesse.\\nNão era apenas uma fuga. Era uma invasão.', voice: 2, duration: 10000, effect: 'heartbeat', particles: 'embers' },
-        { image: './assets/cine-03-portal.png', caption: 'No coração do cemitério, a ferida se abriu.\\nPedra, luz e memória puxavam os fugitivos para além da vida.', voice: 3, duration: 10500, effect: 'portal', particles: 'portal' },
-        { image: './assets/cine-04-reaper-gate.png', caption: 'A Morte atravessou o clarão sem dizer uma palavra.\\nA foice respondeu por ela.', voice: 4, duration: 10500, effect: 'scythe', particles: 'sparks' },
-        { image: './assets/cine-05-souls-gate.png', caption: 'O primeiro fugitivo caiu além dos portões.\\nE cada passo abriu uma nova rachadura no silêncio.', voice: 5, duration: 10500, effect: 'footsteps', particles: 'rain' },
-        { image: './assets/cine-02-fugitive-souls.png', caption: 'Cinquenta ondas separavam a Morte do coração da fuga.\\nNenhuma alma seria deixada para trás.', voice: 6, duration: 10000, effect: 'choir', particles: 'souls' },
-        { image: './assets/cine-03-portal.png', caption: 'O portão se abriu.\\nA perseguição começa agora.', voice: 7, duration: 8500, effect: 'impact', particles: 'embers' }
+        { label: 'CENA 01 · O CEMITÉRIO', image: './assets/cine-01-cemetery.png', caption: 'Quando os sinos se calam, o cemitério ainda respira.\\nSob a lua vermelha, a fronteira entre os mundos começou a ceder.', voice: 0, duration: 17350, effect: 'wind-bells', particles: 'mist' },
+        { label: 'CENA 02 · ALMAS FUGITIVAS', image: './assets/cine-02-fugitive-souls.png', caption: 'Uma a uma, as almas recusaram o chamado.\\nElas rasgaram o véu e correram para onde nenhuma sentença alcança.', voice: 1, duration: 13500, effect: 'whispers', particles: 'souls' },
+        { label: 'CENA 03 · O PRIMEIRO GRITO', image: './assets/cine-02-fugitive-souls.png', caption: 'A Morte ouviu o primeiro grito antes mesmo que ele nascesse.\\nNão era apenas uma fuga. Era uma invasão.', voice: 2, duration: 15750, effect: 'heartbeat', particles: 'embers' },
+        { label: 'CENA 04 · A FERIDA', image: './assets/cine-03-portal.png', caption: 'No coração do cemitério, a ferida se abriu.\\nPedra, luz e memória puxavam os fugitivos para além da vida.', voice: 3, duration: 18900, effect: 'portal', particles: 'portal' },
+        { label: 'CENA 05 · A FOICE', image: './assets/cine-04-reaper-gate.png', caption: 'A Morte atravessou o clarão sem dizer uma palavra.\\nA foice respondeu por ela.', voice: 4, duration: 11500, effect: 'scythe', particles: 'sparks' },
+        { label: 'CENA 06 · ALÉM DOS PORTÕES', image: './assets/cine-05-souls-gate.png', caption: 'O primeiro fugitivo caiu além dos portões.\\nE cada passo abriu uma nova rachadura no silêncio.', voice: 5, duration: 12900, effect: 'footsteps', particles: 'rain' },
+        { label: 'CENA 07 · CINQUENTA ONDAS', image: './assets/cine-02-fugitive-souls.png', caption: 'Cinquenta ondas separavam a Morte do coração da fuga.\\nNenhuma alma seria deixada para trás.', voice: 6, duration: 11550, effect: 'choir', particles: 'souls' },
+        { label: 'CENA 08 · A PERSEGUIÇÃO', image: './assets/cine-03-portal.png', caption: 'O portão se abriu.\\nA perseguição começa agora.', voice: 7, duration: 8600, effect: 'impact', particles: 'embers' }
       ],
       waves: {
         total: 50,

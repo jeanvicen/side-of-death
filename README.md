@@ -54,6 +54,7 @@ Para abrir os projetos nativos, use `npx cap open android` em um ambiente Androi
 | `PUBLISHING.md` | PWA, Capacitor, assinatura e publicação | Ao mudar o processo de distribuição |
 | `MOBILE-TEST-NOTES.md` | Evidências dos testes locais e públicos | Após cada teste de release |
 | `scripts/build.mjs` | Copia os arquivos para `www/` | Se surgir um novo tipo de arquivo de distribuição |
+| `scripts/inspect-cinematic-media.py` | Mede duração dos WAVs e dimensões dos frames da cinematics | Ao trocar uma voz ou plano |
 | `sw.js` | Cache offline e estratégia de atualização | Ao adicionar assets que precisam funcionar offline |
 | `assets/` | Imagens, folhas de sprite, áudio e efeitos | Ao criar conteúdo visual ou sonoro |
 | `www/` | Saída gerada; não é a fonte de edição | Nunca editar manualmente |
@@ -66,7 +67,7 @@ O objeto `SOD_CONTENT` possui cinco áreas principais. `audio` aponta para a tri
 
 | Área | O que controla |
 |---|---|
-| `audio` | Música cinematográfica, som de cenário e oito falas da introdução |
+| `audio` | Música cinematográfica, som de cenário, oito falas e durações medidas da introdução |
 | `assets` | Folhas de sprite da Morte, almas, variantes, Bruxa e fundos |
 | `controls` | Andar, pular, agachar, atacar, lançar foice, rolar e pausar |
 | `defaults` | Largura do mundo, chão, gravidade, câmera e ondas padrão |
@@ -104,7 +105,7 @@ Copie um objeto dentro de `SOD_CONTENT.chapters` e atribua um novo número. `act
 }
 ```
 
-Para criar uma cinematics, acrescente objetos em `intro` com `image`, `caption`, `voice`, `duration`, `effect` e `particles`. O índice `voice` aponta para a posição do arquivo em `audio.voices`, começando em zero. O motor exibe pan/zoom, letterbox, partículas e efeitos de cena automaticamente.
+Para medir uma voz nova antes de editar a cena, execute `python3 scripts/inspect-cinematic-media.py`. Para criar uma cinematics, acrescente objetos em `intro` com `label`, `image`, `caption`, `voice`, `duration`, `effect` e `particles`. O índice `voice` aponta para a posição do arquivo em `audio.voices`, começando em zero. `audio.voiceDurations` deve conter a duração real de cada WAV em segundos e `audio.holdAfterVoice` define o respiro final. O motor usa o maior valor entre `duration` e **duração da voz + respiro**, portanto uma fala nunca é cortada por um timeout menor. A troca de plano usa dois layers com crossfade, e a interface exibe pan/zoom, letterbox, partículas, selo de cena e barra de progresso automaticamente.
 
 ## Combate do jogador
 
@@ -158,7 +159,7 @@ node --check chapters.js
 git diff --check
 ```
 
-Abra o jogo em landscape e confirme o caminho **menu → PLAY → sangue → cinematics → Capítulo 1 → gameplay**. Teste idle, corrida, pulo duplo, agachamento, ataque normal, combo, gancho rasteiro, corte aéreo, rolamento, foice lançada e ataque de poder dos NPCs. Nas ondas 48–50, confirme aviso, arena e Boss.
+Abra o jogo em landscape e confirme o caminho **menu → PLAY → sangue → cinematics → Capítulo 1 → gameplay**. Teste idle, corrida, pulo duplo, agachamento, ataque normal, combo, gancho rasteiro, corte aéreo, rolamento, foice lançada e ataque de poder dos NPCs. Nas ondas 48–50, confirme aviso, arena e Boss. Na web, confirme que `document.fullscreenElement` permanece vazio: o jogo não chama mais `requestFullscreen`, evitando a bolha nativa do navegador que instrui o usuário a arrastar para sair da tela cheia. A orientação horizontal continua sendo aplicada pelo wrapper nativo e a instrução de rotação permanece para portrait.
 
 Para testar a Bruxa sem atravessar manualmente as 49 ondas, abra localmente `http://localhost:4173/?debugboss=1`. Esse modo de QA é ativado somente pela query string, inicia a arena da onda 50 e expõe comandos internos de diagnóstico no console do navegador; ele não aparece no menu nem altera a experiência normal. Os controles de toque esperados são `a`, `d`, `s`, `w`, `k`, `l` e `shift`.
 
