@@ -1,4 +1,4 @@
-const CACHE_NAME = 'side-of-death-v6';
+const CACHE_NAME = 'side-of-death-v7';
 const APP_SHELL = [
   './',
   './index.html',
@@ -31,6 +31,8 @@ const APP_SHELL = [
   './assets/enemy-01-soul-sheet.png',
   './assets/enemy-02-shade-sheet.png',
   './assets/enemy-03-harbinger-sheet.png',
+  './assets/boss-01-witch-sheet.png',
+  './assets/world-03-witch-arena.png',
   './assets/fx-01-combat-effects.png',
   './fonts/press-start-2p.css',
   './fonts/files/press-start-2p-latin-400-normal.woff2',

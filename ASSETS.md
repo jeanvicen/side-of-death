@@ -30,3 +30,7 @@ Os sprites foram gerados em 1920×1920 com canal alfa: `assets/player-01-reaper-
 A cinematics agora também usa `assets/cine-04-reaper-gate.png` e `assets/cine-05-souls-gate.png`, com pan/zoom, letterbox, partículas e efeitos sonoros por cena. O primeiro capítulo usa `assets/world-01-stage.png`; o segundo cenário está em `assets/world-02-city-under-veil.png`. A camada `assets/world-01-foreground.png` foi mantida como referência, mas não é aplicada enquanto não possuir alpha limpo.
 
 A voz natural está em oito arquivos `assets/voice-cine-01.wav` a `assets/voice-cine-08.wav`. A ambiência procedural de cemitério, com vento, sinos distantes, sussurros e pulsos de portal, está em `assets/cemetery-ambience.wav`.
+
+## Assets v3 — Boss da onda 50
+
+A Bruxa usa `assets/boss-01-witch-sheet.png`, folha 4×2 com oito estados: idle, invocação, ataque, chuva de fogo, teleporte, dano, enfurecida e derrota. O fundo gerado originalmente com chroma foi limpo para alpha real antes da integração. A arena final é `assets/world-03-witch-arena.png`, um círculo ritual em ruínas usado quando a onda 50 começa.

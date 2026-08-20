@@ -1,41 +1,61 @@
-# Guia de atualização por capítulos
+# Guia rápido de atualização
 
-O conteúdo editável do jogo fica concentrado em `chapters.js`. O `index.html` contém o motor, os controles e o menu original; para criar novas cenas, trocar textos, substituir cenários ou ajustar ondas, a edição normal deve acontecer somente no arquivo central.
+O jogo foi organizado para que o conteúdo normal seja alterado em `chapters.js`. O arquivo `README.md` é o manual completo; este arquivo é a referência rápida para criar uma fase sem estudar o motor.
 
-## Estrutura do arquivo
+## Ordem de atualização
 
-`SOD_CONTENT.activeChapter` define o capítulo que entra após PLAY. Cada capítulo contém título, subtítulo, objetivo, cenário, cinematics e uma configuração de ondas. O capítulo seguinte pode ser preparado antes de estar liberado alterando o objeto correspondente em `chapters`.
+Primeiro coloque os PNGs e WAVs novos em `assets/`. Depois edite `chapters.js`, adicione os caminhos ao array `APP_SHELL` de `sw.js`, execute `npm run build`, teste em landscape e faça commit/push.
 
-| Campo | O que controla | Exemplo |
-|---|---|---|
-| `title` | Letreiro do capítulo | `CAPÍTULO 2` |
-| `subtitle` | Nome narrativo do cenário | `A CIDADE SOB O VÉU` |
-| `objective` | Texto do HUD; use `\\n` para quebrar linha | `O PORTAL FUGIU\\nA CIDADE AGORA RESPIRA` |
-| `world.background` | Imagem principal repetida no parallax | `./assets/world-02-city-under-veil.png` |
-| `intro` | Lista de planos cinematográficos | `image`, `caption`, `voice`, `duration`, `effect`, `particles` |
-| `waves.total` | Quantidade de ondas antes do botão de avanço | `50` |
-| `waves.variants` | Tipos de NPC liberados por onda | `wisp`, `shade`, `soul`, `harbinger` |
+```bash
+npm run build
+git add -A
+git commit -m "Update chapter"
+git push origin main
+```
 
-## Como adicionar uma cena
+## Campos principais
 
-Adicione um objeto dentro de `intro`. `image` aponta para um PNG dentro de `assets`, `caption` é o texto visível, `voice` é o índice da voz em `audio.voices`, e `duration` está em milissegundos. Os efeitos disponíveis atualmente são `wind-bells`, `whispers`, `heartbeat`, `portal`, `scythe`, `footsteps`, `choir` e `impact`. Para partículas, use `mist`, `souls`, `embers`, `portal`, `sparks` ou `rain`.
+| Campo | Uso |
+|---|---|
+| `activeChapter` | Número do capítulo que começa após PLAY |
+| `assets` | Registro dos sprites e cenários principais |
+| `controls` | Teclas do jogador |
+| `defaults` | Largura, chão, gravidade e câmera |
+| `player` | Vida, velocidade, pulo duplo, rolamento, combos e foice |
+| `enemyAI` | Agressividade e poderes dos NPCs |
+| `difficulty` | Escalonamento e onda do Boss |
+| `chapters[n]` | História e regras de uma fase |
+
+## Novo capítulo
 
 ```js
-{
-  image: './assets/cine-06-city-gate.png',
-  caption: 'A cidade fechou suas portas.\\nMas alguma coisa ainda observa das janelas.',
-  voice: 8,
-  duration: 10000,
-  effect: 'whispers',
-  particles: 'souls'
+3: {
+  id: 3,
+  title: 'CAPÍTULO 3',
+  subtitle: 'NOME DO CENÁRIO',
+  objective: 'OBJETIVO\\nSEGUNDA LINHA',
+  world: {
+    background: './assets/world-03.png',
+    accent: '#ff3048',
+    fog: '#807899',
+    layers: []
+  },
+  intro: [],
+  waves: {
+    total: 50,
+    baseCount: 3,
+    maxCount: 12,
+    spawnGap: 160,
+    intermission: 1.5,
+    variants: []
+  },
+  boss: null
 }
 ```
 
-O texto falado precisa estar no arquivo de voz correspondente. A narração é desbloqueada no primeiro gesto do usuário e toca sobre a ambiência e a trilha sem que as instruções de atuação sejam lidas.
+## NPC novo
 
-## Como configurar ondas e NPCs
-
-Cada variante possui `every`, que define a primeira onda em que ela aparece, `hp`, `speed`, `damage`, `size`, `color`, `sheet` e `weight`. O motor aumenta gradualmente a quantidade de almas e a vida dos inimigos ao longo das ondas. A fase mostra o botão `PRÓXIMO CAPÍTULO` somente depois de vencer o valor definido em `waves.total`.
+`every` indica a primeira onda em que o NPC aparece. `weight` altera a frequência. `sheet` aponta para a folha 4×2 transparente. Os poderes são definidos por `enemyAI.behaviors` usando o mesmo `id`.
 
 ```js
 {
@@ -51,6 +71,26 @@ Cada variante possui `every`, que define a primeira onda em que ela aparece, `hp
 }
 ```
 
-Depois de editar o conteúdo, execute `npm run build`. Para atualizar também os projetos nativos, execute `npx cap sync`. O service worker precisa conter os novos caminhos em `APP_SHELL` para o cache offline receber os arquivos.
+## Combos e habilidades
 
-> Regra prática: conteúdo vai em `chapters.js`; código do motor só deve ser alterado quando for necessário criar uma mecânica nova que ainda não existe.
+O ataque usa `K`. A sequência normal está em `player.combos`. `S + K` usa `crouchCombo` e cria o gancho rasteiro. `W + K` no ar usa `airCombo`. `L` lança a foice em chamas; `Shift` faz o rolamento com invulnerabilidade curta; dois toques de `W` executam o pulo duplo. Ajuste cooldowns, dano, velocidade e janela de combo no objeto `player`.
+
+## Boss da onda 50
+
+O bloco `boss` do capítulo controla nome, vida, sprite, arena, fases por percentual de vida e poderes. O Boss só é invocado na onda definida em `boss.wave` ou em `difficulty.bossWave`. A configuração atual usa a Bruxa do Véu com chuva de fogo, teleporte, três orbes e ataque de garras.
+
+```js
+boss: {
+  wave: 50,
+  id: 'witch',
+  name: 'A BRUXA DO VÉU',
+  sheet: './assets/boss-01-witch-sheet.png',
+  hp: 420,
+  size: 2.05,
+  arenaBackground: './assets/world-03-witch-arena.png'
+}
+```
+
+## O que não editar
+
+Não edite `www/`, porque é uma saída gerada. Não remova os arquivos do menu. Não coloque senhas, keystores ou credenciais no GitHub. Para uma nova mecânica que não esteja descrita neste guia, leia primeiro o README e só então altere o motor em `index.html`.
