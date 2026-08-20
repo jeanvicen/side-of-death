@@ -2,12 +2,20 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#080308">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIDE OF DEATH">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>SIDE OF DEATH — KLIPZA STUDIO</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/press-start-2p@latest/index.css">
+<link rel="stylesheet" href="fonts/press-start-2p.css">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;background:#000;overflow:hidden}
+  html,body{width:100%;height:100%;min-height:100%;height:100dvh;background:#000;overflow:hidden}
   body{
     font-family:'Press Start 2P','Courier New',monospace;
     cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, crosshair;
@@ -15,7 +23,7 @@
   }
   button{font-family:inherit;cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' shape-rendering='crispEdges'%3E%3Cg fill='%23e8e3d8'%3E%3Crect x='11' y='1' width='2' height='7'/%3E%3Crect x='11' y='16' width='2' height='7'/%3E%3Crect x='1' y='11' width='7' height='2'/%3E%3Crect x='16' y='11' width='7' height='2'/%3E%3C/g%3E%3Crect x='10' y='10' width='4' height='4' fill='%23ff2233'/%3E%3C/svg%3E") 12 12, pointer;outline:none;border:0}
 
-  #stage{position:fixed;inset:0;overflow:hidden;background:#050208}
+  #stage{position:fixed;inset:0;width:100%;height:100dvh;min-height:100%;overflow:hidden;background:#050208}
   #stage.shaking{animation:shakeS .45s steps(8)}
   @keyframes shakeS{
     0%{transform:translate(0,0)}12%{transform:translate(-8px,5px)}25%{transform:translate(7px,-6px)}
@@ -120,7 +128,7 @@
   #stage.in #hint{animation:rise .5s 1.9s backwards}
   @media (pointer:coarse){#hint{display:none}}
 
-  #credits{position:absolute;left:0;right:0;bottom:14px;z-index:12;text-align:center;pointer-events:none;
+  #credits{position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));z-index:12;text-align:center;pointer-events:none;
     font-size:8px;color:#8a8177;letter-spacing:.18em;line-height:2}
   #credits b{color:#c4bba9}
   #credits .ver{color:#5c554c}
@@ -181,6 +189,19 @@
   #soonOverlay .skull{image-rendering:pixelated;animation:skullBob 2s steps(2) infinite}
   @keyframes skullBob{0%,100%{translate:0 0}50%{translate:0 3px}}
 
+  #installPrompt{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));z-index:90;width:min(520px,calc(100vw - 28px));display:flex;align-items:center;gap:14px;padding:14px 14px 14px 18px;background:linear-gradient(135deg,rgba(24,4,10,.98),rgba(8,2,5,.98));border:3px solid #5b0d19;box-shadow:inset 0 0 0 2px #170307,0 0 0 2px #000,0 0 26px rgba(255,17,40,.32);transform:translate(-50%,140%);opacity:0;pointer-events:none;transition:transform .3s steps(4),opacity .3s ease}
+  #installPrompt::before{content:'';position:absolute;left:10%;right:38%;top:-4px;height:5px;background:#d90429;box-shadow:0 0 12px #ff1128}
+  #installPrompt.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+  #installPrompt[hidden]{display:none}
+  #installPrompt .install-mark{width:36px;height:42px;flex:0 0 36px;position:relative;background:#160a0d;box-shadow:inset 0 0 0 3px #3d0c14}
+  #installPrompt .install-mark::before{content:'✚';position:absolute;inset:0;display:grid;place-items:center;color:#ff2233;font-size:20px;text-shadow:0 0 12px #ff0030}
+  #installPrompt .install-copy{flex:1;min-width:0;color:#d8cfc1;font-size:9px;line-height:1.8;letter-spacing:.08em}
+  #installPrompt .install-copy b{display:block;color:#ff3345;font-size:10px;letter-spacing:.12em}
+  #installPrompt .install-action,#installPrompt .install-dismiss{font-family:inherit;white-space:nowrap;font-size:8px;letter-spacing:.08em;padding:12px 10px;color:#f3e9db;background:#350914;box-shadow:inset 0 0 0 2px #a30b21,0 3px 0 #000}
+  #installPrompt .install-action:hover,#installPrompt .install-action:focus{background:#650d1b;color:#fff}
+  #installPrompt .install-dismiss{padding:8px 4px;color:#9f9283;background:transparent;box-shadow:none}
+  #installPrompt .install-dismiss:hover,#installPrompt .install-dismiss:focus{color:#fff}
+
   #crt{position:fixed;inset:0;z-index:60;pointer-events:none;
     background:
       repeating-linear-gradient(0deg,rgba(0,0,0,.24) 0 1px,transparent 1px 3px),
@@ -196,6 +217,11 @@
 
   @media (max-width:640px){
     #reaper,#reaperFallback{height:58vh}
+    #installPrompt{gap:10px;padding:12px 10px 12px 12px}
+    #installPrompt .install-copy{font-size:8px}
+    #installPrompt .install-copy b{font-size:9px}
+    #installPrompt .install-action{font-size:7px;padding:11px 8px}
+    #installPrompt .install-dismiss{font-size:7px}
     #menuButtons{margin-top:clamp(30px,6vh,70px)}
     .mbtn{padding:16px 30px}
   }
@@ -289,20 +315,27 @@
   <div id="skipHint">CLIQUE PARA PULAR</div>
 </div>
 
+<div id="installPrompt" hidden role="dialog" aria-live="polite" aria-label="Instalar SIDE OF DEATH">
+  <span class="install-mark" aria-hidden="true"></span>
+  <span class="install-copy"><b>INSTALAR SIDE OF DEATH</b>Jogue em tela cheia, com sangue e som.</span>
+  <button class="install-action" id="btnInstall" type="button">INSTALAR</button>
+  <button class="install-dismiss" id="btnDismissInstall" type="button" aria-label="Fechar aviso">×</button>
+</div>
+
 <div id="crt"></div>
 
 <script>
 (()=>{'use strict';
 const $=s=>document.querySelector(s);
-const BG_URL='https://image.qwenlm.ai/public_source/0244c5a1-3cfe-4760-9420-c527aac322c9/1944c21fc-cf69-4e89-81e2-6cde71874816.png';
-const REAPER_URL='https://image.qwenlm.ai/public_source/0244c5a1-3cfe-4760-9420-c527aac322c9/1edf1d34f-4e9e-4018-9c0e-270d37961d06.png';
+const BG_URL='./assets/background.png';
+const REAPER_URL='./assets/reaper.png';
 
 /* ============================================
    MÚSICA REAL - METAL MANIA (Kevin MacLeod)
    Rock pesado com guitarra, baixo e bateria
    150 BPM - Aggressive, Driving, Intense
    ============================================ */
-const MUSIC_URL = 'https://incompetech.com/music/royalty-free/mp3-royaltyfree/Metalmania.mp3';
+const MUSIC_URL = './assets/metalmania.mp3';
 
 const store={
   get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -314,6 +347,7 @@ const saveSettings=()=>store.set('sod_settings',SETTINGS);
 /* ================= ÁUDIO ================= */
 let AC=null, master, sfxBus, musicBus, musicBuffer=null, musicSource=null, musicGain=null;
 let musicLoaded=false, musicPlaying=false;
+let musicLoadPromise=null;
 let musicFadeInterval=null;
 
 function initAudio(){
@@ -322,23 +356,33 @@ function initAudio(){
   
   master=AC.createGain();master.gain.value=.85;master.connect(AC.destination);
   sfxBus=AC.createGain();sfxBus.connect(master);
-  musicBus=AC.createGain();musicBus.gain.value=0;musicBus.connect(master);
+  musicBus=AC.createGain();musicBus.gain.value=.9;musicBus.connect(master);
   
   // Carrega a música real
   loadMusic();
 }
 
 async function loadMusic(){
-  try{
-    const response = await fetch(MUSIC_URL);
-    const arrayBuffer = await response.arrayBuffer();
-    musicBuffer = await AC.decodeAudioData(arrayBuffer);
-    musicLoaded = true;
-    console.log('✓ Música carregada:', musicBuffer.duration.toFixed(1), 'segundos');
-  }catch(e){
-    console.warn('Falha ao carregar música:', e);
-    musicLoaded = false;
-  }
+  if(!AC)return null;
+  if(musicLoaded)return musicBuffer;
+  if(musicLoadPromise)return musicLoadPromise;
+  musicLoadPromise=(async()=>{
+    try{
+      const response = await fetch(MUSIC_URL);
+      const arrayBuffer = await response.arrayBuffer();
+      musicBuffer = await AC.decodeAudioData(arrayBuffer);
+      musicLoaded = true;
+      console.log('✓ Música carregada:', musicBuffer.duration.toFixed(1), 'segundos');
+      return musicBuffer;
+    }catch(e){
+      console.warn('Falha ao carregar música:', e);
+      musicLoaded = false;
+      return null;
+    }
+  })();
+  const result=await musicLoadPromise;
+  musicLoadPromise=null;
+  return result;
 }
 
 /* --- SFX (sons de interface) --- */
@@ -367,7 +411,12 @@ const SFX={
   back(){if(SETTINGS.sfx)tone(320,170,.14,'square',.09)},
   boom(){if(!SETTINGS.sfx)return;tone(130,36,.55,'sine',.55);noiseHit(.35,.3,220,.8);tone(82,40,.4,'sawtooth',.2,.02)},
   slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.32,2400,1.2);tone(900,110,.22,'sawtooth',.15)},
-  toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)}
+  toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)},
+  introReveal(){if(!SETTINGS.sfx)return;noiseHit(.42,.24,900,.6);tone(190,42,.62,'sawtooth',.28);tone(74,38,.7,'sine',.36,.03)},
+  introLetter(i){if(!SETTINGS.sfx)return;const pitch=175+(i%4)*24;tone(pitch,pitch*.52,.14,'square',.12);noiseHit(.08,.11,1450+(i%3)*260,1.7,.015)},
+  introBar(){if(!SETTINGS.sfx)return;noiseHit(.18,.16,2200,2);tone(760,140,.2,'sawtooth',.12)},
+  introTag(){if(!SETTINGS.sfx)return;tone(110,54,.45,'sawtooth',.2);noiseHit(.3,.16,320,.8,.02)},
+  introRock(){if(!SETTINGS.sfx)return;noiseHit(.3,.28,1000,.7);tone(210,58,.4,'sawtooth',.25);tone(92,42,.5,'sine',.28,.03)}
 };
 
 /* ================= MÚSICA (LOOP COM CROSSFADE) ================= */
@@ -441,15 +490,70 @@ function applySettings(){
   document.body.classList.toggle('noblood', !SETTINGS.blood);
 }
 
+/* ================= APP / TELA CHEIA ================= */
+const installEl=$('#installPrompt');
+const installBtn=$('#btnInstall');
+const dismissInstallBtn=$('#btnDismissInstall');
+let deferredInstallPrompt=null;
+let installFallbackTimer=null;
+
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || window.navigator.standalone === true;
+}
+function sessionFlag(key){try{return sessionStorage.getItem(key)==='1'}catch(e){return false}}
+function setSessionFlag(key){try{sessionStorage.setItem(key,'1')}catch(e){}}
+function showInstallPrompt(){
+  if(isStandalone() || sessionFlag('sod_install_seen'))return;
+  installEl.hidden=false;
+  requestAnimationFrame(()=>installEl.classList.add('show'));
+}
+function hideInstallPrompt(){
+  installEl.classList.remove('show');
+  setSessionFlag('sod_install_seen');
+  setTimeout(()=>{installEl.hidden=true},320);
+}
+async function enterImmersive(){
+  try{
+    if(!document.fullscreenElement && document.documentElement.requestFullscreen){
+      await document.documentElement.requestFullscreen({navigationUI:'hide'});
+    }
+  }catch(e){}
+  try{
+    if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
+  }catch(e){}
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  installBtn.textContent='INSTALAR';
+  showInstallPrompt();
+});
+window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;hideInstallPrompt()});
+installBtn.addEventListener('click',async()=>{
+  gestureInit();
+  if(!deferredInstallPrompt){
+    installBtn.textContent='VEJA O MENU';
+    installEl.querySelector('.install-copy').innerHTML='<b>INSTALAÇÃO MANUAL</b>Abra o menu do navegador e escolha “Instalar app” ou “Adicionar à tela inicial”.';
+    return;
+  }
+  const promptEvent=deferredInstallPrompt;
+  deferredInstallPrompt=null;
+  await promptEvent.prompt();
+  hideInstallPrompt();
+});
+dismissInstallBtn.addEventListener('click',hideInstallPrompt);
+
 let audioReady=false;
 function gestureInit(){
   if(audioReady){
     if(AC && AC.state==='suspended') AC.resume();
+    enterImmersive();
     return;
   }
   audioReady = true;
   initAudio();
   applySettings();
+  enterImmersive();
   
   // Espera a música carregar antes de iniciar
   if(musicLoaded){
@@ -464,6 +568,7 @@ function gestureInit(){
 
 document.addEventListener('pointerdown', gestureInit);
 document.addEventListener('keydown', gestureInit);
+if(!isStandalone()) installFallbackTimer=setTimeout(showInstallPrompt,1200);
 
 /* ================= CENÁRIO / CEIFADOR ================= */
 const bg=$('#bg');bg.src=BG_URL;
@@ -573,15 +678,24 @@ function spawnDrop(xPct){
 const introEl=$('#intro');
 let introTimers=[],introDone=false;
 function runIntro(){
+  introDone=false;
   introEl.classList.remove('hide','logo-on','ap-on');
   introEl.classList.add('show');
   const txt='KLIPZA STUDIO';
   $('#logoText').innerHTML=[...txt].map((c,i)=>'<span style="--i:'+i+'">'+(c===' '?'&nbsp;':c)+'</span>').join('');
   introTimers=[];
   const t1=650,t2=t1+txt.length*80+650;
-  introTimers.push(setTimeout(()=>introEl.classList.add('logo-on'),t1));
-  introTimers.push(setTimeout(()=>introEl.classList.add('ap-on'),t2));
+  introTimers.push(setTimeout(()=>{introEl.classList.add('logo-on');SFX.introReveal()},t1));
+  [...txt].forEach((c,i)=>introTimers.push(setTimeout(()=>SFX.introLetter(i),t1+i*80+250)));
+  introTimers.push(setTimeout(()=>SFX.introBar(),t1+1000));
+  introTimers.push(setTimeout(()=>{introEl.classList.add('ap-on');SFX.introTag()},t2));
+  introTimers.push(setTimeout(()=>{SFX.introRock();startIntroMusic()},t2+430));
   introTimers.push(setTimeout(endIntro,t2+2200));
+}
+function startIntroMusic(){
+  if(!AC || !SETTINGS.music)return;
+  if(musicLoaded){startMusic();return}
+  loadMusic().then(()=>{if(SETTINGS.music&&!musicPlaying)startMusic()});
 }
 function endIntro(){
   if(introDone)return;introDone=true;
@@ -590,7 +704,7 @@ function endIntro(){
   gestureInit();
   setTimeout(()=>{introEl.classList.remove('show');enterMenu()},650);
 }
-introEl.addEventListener('pointerdown',()=>{if(!introDone)endIntro()});
+introEl.addEventListener('pointerdown',()=>{if(introDone)return;if(!audioReady){gestureInit();return}endIntro()});
 
 /* ================= MENU ================= */
 let menuActive=false,focused=0,menuTimers=[],playing=false;
@@ -698,6 +812,9 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
+if(location.protocol==='http:'||location.protocol==='https:'){
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
 applySettings();
 runIntro();
 })();

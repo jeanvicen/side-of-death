@@ -1,0 +1,23 @@
+{
+  "appId": "com.klipzastudio.sideofdeath",
+  "appName": "SIDE OF DEATH",
+  "webDir": "www",
+  "backgroundColor": "#050208",
+  "loggingBehavior": "none",
+  "android": {
+    "backgroundColor": "#050208",
+    "minWebViewVersion": 60,
+    "loggingBehavior": "none",
+    "buildOptions": {
+      "releaseType": "AAB",
+      "signingType": "apksigner"
+    }
+  },
+  "ios": {
+    "backgroundColor": "#050208",
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "preferredContentMode": "mobile",
+    "loggingBehavior": "none"
+  }
+}
