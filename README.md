@@ -54,6 +54,7 @@ Para abrir os projetos nativos, use `npx cap open android` em um ambiente Androi
 | `PUBLISHING.md` | PWA, Capacitor, assinatura e publicação | Ao mudar o processo de distribuição |
 | `MOBILE-TEST-NOTES.md` | Evidências dos testes locais e públicos | Após cada teste de release |
 | `CARRION-DESIGN-RESEARCH.md` | Referências de design e decisões próprias de exploração | Ao planejar novas cidades |
+| `GROWTH-PLAN-RESEARCH.md` | Plano de descoberta, demo, loja, comunidade e divulgação | Ao preparar lançamentos e campanhas |
 | `scripts/build.mjs` | Copia os arquivos para `www/` | Se surgir um novo tipo de arquivo de distribuição |
 | `scripts/inspect-cinematic-media.py` | Mede duração dos WAVs e dimensões dos frames da cinematics | Ao trocar uma voz ou plano |
 | `sw.js` | Cache offline e estratégia de atualização | Ao adicionar assets que precisam funcionar offline |
