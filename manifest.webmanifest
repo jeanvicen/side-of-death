@@ -8,7 +8,7 @@
   "id": "/",
   "display": "standalone",
   "display_override": ["fullscreen", "standalone", "minimal-ui"],
-  "orientation": "portrait",
+  "orientation": "landscape",
   "background_color": "#050208",
   "theme_color": "#080308",
   "categories": ["games", "entertainment"],

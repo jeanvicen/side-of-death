@@ -4,7 +4,7 @@
 
 O projeto agora funciona como uma aplicação web instalável (PWA) e possui configuração Capacitor para gerar o projeto Android e o projeto iOS a partir da mesma pasta `www`. O HTML continua sendo a entrada única do jogo; o menu original não foi remodelado.
 
-O navegador pode promover a instalação quando a aplicação é servida por HTTPS ou `localhost`, porque o projeto possui manifesto, ícones nos tamanhos exigidos e `display: standalone`. Em navegadores Chromium, o aviso de instalação estilizado em sangue usa o evento `beforeinstallprompt`; em navegadores que não oferecem esse evento, a mesma notificação orienta a instalação pelo menu do navegador. No iOS, a instalação pelo navegador segue o fluxo de “Adicionar à Tela de Início” do Safari/Chrome.
+O navegador pode promover a instalação quando a aplicação é servida por HTTPS ou `localhost`, porque o projeto possui manifesto, ícones nos tamanhos exigidos e `display: standalone`. O jogo foi configurado para **orientação horizontal/deitada** no PWA, Android e iOS; se o aparelho estiver em pé, aparece uma instrução para girá-lo. Em navegadores Chromium, o aviso de instalação estilizado em sangue usa o evento `beforeinstallprompt`; em navegadores que não oferecem esse evento, a mesma notificação permanece visível e orienta a instalação pelo menu do navegador. No iOS, a instalação pelo navegador segue o fluxo de “Adicionar à Tela de Início” do Safari/Chrome.
 
 ## Rodar localmente
 

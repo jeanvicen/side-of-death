@@ -215,17 +215,23 @@
   @keyframes crtFlick{0%,100%{opacity:1}7%{opacity:.93}9%{opacity:1}46%{opacity:.96}48%{opacity:1}}
   #crt.off{display:none}
 
+  #rotateNotice{display:none}
+  @media (orientation:landscape) and (max-width:900px){
+    #menuUI{padding-top:4vh}
+    #reaper,#reaperFallback{height:min(78vh,600px)}
+    #menuButtons{gap:16px;margin-top:clamp(30px,7vh,74px)}
+    .mbtn{min-width:min(320px,42vw);padding:15px 34px}
+    #installPrompt{width:min(560px,calc(100vw - 24px));padding:11px 12px 11px 14px}
+    #installPrompt .install-copy{font-size:8px;line-height:1.6}
+    #installPrompt .install-copy b{font-size:9px}
+    #installPrompt .install-action{font-size:7px;padding:10px 9px}
+  }
   @media (orientation:portrait){
-    #menuUI{padding-top:5vh}
-    #reaper,#reaperFallback{height:min(42vh,460px)}
-    #reaperFloat{margin-bottom:-1vh}
-    #titleLine1{font-size:clamp(10px,3.5vw,17px);letter-spacing:.42em}
-    #titleLine2{font-size:clamp(38px,14vw,74px)}
-    #menuButtons{gap:14px;margin-top:clamp(24px,4vh,52px)}
-    .mbtn{min-width:min(280px,78vw);padding:15px 24px}
-    #hint{display:none}
-    #credits{font-size:6px;line-height:1.8;bottom:calc(9px + env(safe-area-inset-bottom))}
-    #installPrompt{width:calc(100vw - 20px);gap:8px;padding:11px 9px 11px 11px}
+    #rotateNotice{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:radial-gradient(circle at center,#3b0712 0,#090207 55%,#000 100%);color:#f2ecdf;text-align:center;padding:28px;letter-spacing:.16em}
+    #rotateNotice::before{content:'↔';font-family:Arial,sans-serif;font-size:76px;line-height:1;color:#ff2233;text-shadow:0 0 24px #ff0030;animation:rotatePhone 1.4s steps(2) infinite}
+    #rotateNotice b{font-size:clamp(15px,5vw,24px);color:#ff3345;text-shadow:3px 3px 0 #280008}
+    #rotateNotice span{font-size:clamp(8px,2.8vw,12px);line-height:2;color:#cfc7b8}
+    #installPrompt{display:flex!important;z-index:130;width:calc(100vw - 20px);gap:8px;padding:11px 9px 11px 11px}
     #installPrompt .install-mark{width:30px;height:36px;flex-basis:30px}
     #installPrompt .install-mark::before{font-size:16px}
     #installPrompt .install-copy{font-size:7px;line-height:1.65}
@@ -233,16 +239,12 @@
     #installPrompt .install-action{font-size:7px;padding:10px 7px}
     #installPrompt .install-dismiss{font-size:7px}
   }
-
-  @media (max-width:640px){
-    #reaper,#reaperFallback{height:min(42vh,460px)}
-    #menuButtons{margin-top:clamp(24px,4vh,52px)}
-    .mbtn{padding:15px 24px}
-  }
+  @keyframes rotatePhone{50%{transform:rotate(90deg)}}
 </style>
 </head>
 <body>
 <audio id="bgMusic" preload="auto" loop playsinline aria-hidden="true"></audio>
+<div id="rotateNotice" aria-live="polite"><b>GIRE O CELULAR</b><span>JOGUE DEITADO, NA HORIZONTAL</span></div>
 
 <div id="stage">
   <div id="bgWrap"><img id="bg" alt="" draggable="false"></div>
@@ -330,7 +332,7 @@
   <div id="skipHint">CLIQUE PARA PULAR</div>
 </div>
 
-<div id="installPrompt" hidden role="dialog" aria-live="polite" aria-label="Instalar SIDE OF DEATH">
+<div id="installPrompt" role="dialog" aria-live="polite" aria-label="Instalar SIDE OF DEATH">
   <span class="install-mark" aria-hidden="true"></span>
   <span class="install-copy"><b>INSTALAR SIDE OF DEATH</b>Jogue em tela cheia, com sangue e som.</span>
   <button class="install-action" id="btnInstall" type="button">INSTALAR</button>
@@ -367,6 +369,7 @@ let musicLoaded=false, musicPlaying=false;
 let musicLoadPromise=null;
 let musicFadeInterval=null;
 let musicMode='native';
+let musicUnlocked=false;
 
 function initAudio(){
   if(AC){if(AC.state==='suspended')AC.resume();return}
@@ -381,6 +384,23 @@ function initAudio(){
   bgMusic.volume=.82;
   bgMusic.load();
   loadMusic();
+}
+
+function unlockMusic(){
+  if(musicUnlocked)return;
+  bgMusic.muted=true;
+  const p=bgMusic.play();
+  if(p&&p.then){
+    p.then(()=>{
+      musicUnlocked=true;
+      if(!musicPlaying){bgMusic.pause();bgMusic.currentTime=0}
+      bgMusic.muted=false;
+    }).catch(()=>{bgMusic.muted=false});
+  }else{
+    musicUnlocked=true;
+    if(!musicPlaying){bgMusic.pause();bgMusic.currentTime=0}
+    bgMusic.muted=false;
+  }
 }
 
 function loadMusic(){
@@ -433,10 +453,10 @@ const SFX={
   slash(){if(!SETTINGS.sfx)return;noiseHit(.28,.32,2400,1.2);tone(900,110,.22,'sawtooth',.15)},
   toggle(){if(SETTINGS.sfx)tone(440,440,.05,'square',.08)},
   introReveal(){if(!SETTINGS.sfx)return;noiseHit(.42,.24,900,.6);tone(190,42,.62,'sawtooth',.28);tone(74,38,.7,'sine',.36,.03)},
-  introLetter(i){if(!SETTINGS.sfx)return;const pitch=175+(i%4)*24;tone(pitch,pitch*.52,.14,'square',.12);noiseHit(.08,.11,1450+(i%3)*260,1.7,.015)},
-  introBar(){if(!SETTINGS.sfx)return;noiseHit(.18,.16,2200,2);tone(760,140,.2,'sawtooth',.12)},
-  introTag(){if(!SETTINGS.sfx)return;tone(110,54,.45,'sawtooth',.2);noiseHit(.3,.16,320,.8,.02)},
-  introRock(){if(!SETTINGS.sfx)return;noiseHit(.3,.28,1000,.7);tone(210,58,.4,'sawtooth',.25);tone(92,42,.5,'sine',.28,.03)}
+  introLetter(i){if(!SETTINGS.sfx)return;const pitch=175+(i%4)*24;tone(pitch,pitch*.46,.16,'square',.2);tone(1180+(i%3)*120,520,.12,'triangle',.12,.012);noiseHit(.12,.28,3200+(i%3)*260,2.6,.018)},
+  introBar(){if(!SETTINGS.sfx)return;noiseHit(.22,.3,2600,2.4);tone(820,120,.24,'sawtooth',.2)},
+  introTag(){if(!SETTINGS.sfx)return;tone(125,48,.5,'sawtooth',.28);noiseHit(.34,.25,420,.9,.02);noiseHit(.16,.18,2400,2.2,.04)},
+  introRock(){if(!SETTINGS.sfx)return;noiseHit(.34,.38,1100,.7);tone(235,52,.46,'sawtooth',.34);tone(98,38,.56,'sine',.36,.03)}
 };
 
 /* ================= MÚSICA (LOOP COM CROSSFADE) ================= */
@@ -493,14 +513,22 @@ function isStandalone(){
 }
 function sessionFlag(key){try{return sessionStorage.getItem(key)==='1'}catch(e){return false}}
 function setSessionFlag(key){try{sessionStorage.setItem(key,'1')}catch(e){}}
+let installDismissed=false;
+if(isStandalone()){
+  installDismissed=true;
+  installEl.hidden=true;
+}else{
+  installEl.hidden=false;
+  requestAnimationFrame(()=>installEl.classList.add('show'));
+}
 function showInstallPrompt(){
-  if(isStandalone() || sessionFlag('sod_install_seen'))return;
+  if(isStandalone() || installDismissed)return;
   installEl.hidden=false;
   requestAnimationFrame(()=>installEl.classList.add('show'));
 }
 function hideInstallPrompt(){
+  installDismissed=true;
   installEl.classList.remove('show');
-  setSessionFlag('sod_install_seen');
   setTimeout(()=>{installEl.hidden=true},320);
 }
 async function enterImmersive(){
@@ -510,7 +538,7 @@ async function enterImmersive(){
     }
   }catch(e){}
   try{
-    if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait');
+    if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
   }catch(e){}
 }
 window.addEventListener('beforeinstallprompt',e=>{
@@ -543,6 +571,7 @@ function gestureInit(){
   }
   audioReady = true;
   initAudio();
+  unlockMusic();
   applySettings();
   enterImmersive();
   
@@ -557,9 +586,14 @@ function gestureInit(){
   }
 }
 
-document.addEventListener('pointerdown', gestureInit);
-document.addEventListener('keydown', gestureInit);
-if(!isStandalone()) installFallbackTimer=setTimeout(showInstallPrompt,1200);
+function handleFirstGesture(e){
+  const introNeedsUnlock=!audioReady && introEl.classList.contains('show') && !introDone;
+  if(!audioReady)gestureInit();
+  if(introNeedsUnlock && introEl.classList.contains('show') && !introDone)runIntro();
+}
+document.addEventListener('pointerdown', handleFirstGesture);
+document.addEventListener('keydown', handleFirstGesture);
+if(!isStandalone()) installFallbackTimer=setTimeout(showInstallPrompt,1700);
 
 /* ================= CENÁRIO / CEIFADOR ================= */
 const bg=$('#bg');bg.src=BG_URL;
@@ -674,13 +708,17 @@ function runIntro(){
   introEl.classList.add('show');
   const txt='KLIPZA STUDIO';
   $('#logoText').innerHTML=[...txt].map((c,i)=>'<span style="--i:'+i+'">'+(c===' '?'&nbsp;':c)+'</span>').join('');
-  introTimers=[];
+  introTimers.forEach(clearTimeout);introTimers=[];
   const t1=650,t2=t1+txt.length*80+650;
   introTimers.push(setTimeout(()=>{introEl.classList.add('logo-on');SFX.introReveal()},t1));
   [...txt].forEach((c,i)=>introTimers.push(setTimeout(()=>SFX.introLetter(i),t1+i*80+250)));
   introTimers.push(setTimeout(()=>SFX.introBar(),t1+1000));
-  introTimers.push(setTimeout(()=>{introEl.classList.add('ap-on');SFX.introTag()},t2));
-  introTimers.push(setTimeout(()=>{SFX.introRock();startIntroMusic()},t2+430));
+  introTimers.push(setTimeout(()=>{
+    introEl.classList.add('ap-on');
+    SFX.introTag();
+    SFX.introRock();
+  },t2));
+  introTimers.push(setTimeout(startIntroMusic,t2+180));
   introTimers.push(setTimeout(endIntro,t2+2200));
 }
 function startIntroMusic(){
@@ -694,7 +732,7 @@ function endIntro(){
   gestureInit();
   setTimeout(()=>{introEl.classList.remove('show');enterMenu()},650);
 }
-introEl.addEventListener('pointerdown',()=>{if(introDone)return;if(!audioReady){gestureInit();return}endIntro()});
+introEl.addEventListener('pointerdown',()=>{if(introDone)return;if(!audioReady){gestureInit();runIntro();return}endIntro()});
 
 /* ================= MENU ================= */
 let menuActive=false,focused=0,menuTimers=[],playing=false;
@@ -710,6 +748,7 @@ function enterMenu(){
   void st.offsetWidth;
   menuActive=true;setFocus(0);
   st.classList.add('in');
+  menuTimers.push(setTimeout(()=>{if(!isStandalone())showInstallPrompt()},420));
   menuTimers.push(setTimeout(()=>{st.classList.add('shaking');flashRed();SFX.boom()},1080));
   menuTimers.push(setTimeout(()=>st.classList.remove('shaking'),1560));
   menuTimers.push(setTimeout(startDrips,1700));
@@ -803,7 +842,9 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 if(location.protocol==='http:'||location.protocol==='https:'){
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
+  }
 }
 applySettings();
 runIntro();
