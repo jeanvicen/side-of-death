@@ -2,9 +2,9 @@
 
 ## O que foi preparado
 
-O projeto agora funciona como uma aplicação web instalável (PWA) e possui configuração Capacitor para gerar o projeto Android e o projeto iOS a partir da mesma pasta `www`. O HTML continua sendo a entrada única do jogo; o menu original não foi remodelado.
+O projeto agora funciona como uma aplicação web instalável (PWA) e possui configuração Capacitor para gerar o projeto Android e o projeto iOS a partir da mesma pasta `www`. O HTML continua sendo o motor visual principal e o menu original não foi remodelado. O conteúdo de capítulos, cenas, falas, assets, configurações de física e composição das ondas fica centralizado em `chapters.js`; consulte `CHAPTERS-GUIDE.md` antes de criar novas fases.
 
-O navegador pode promover a instalação quando a aplicação é servida por HTTPS ou `localhost`, porque o projeto possui manifesto, ícones nos tamanhos exigidos e `display: standalone`. O jogo foi configurado para **orientação horizontal/deitada** no PWA, Android e iOS; se o aparelho estiver em pé, aparece uma instrução para girá-lo. Em navegadores Chromium, o aviso de instalação estilizado em sangue usa o evento `beforeinstallprompt`; em navegadores que não oferecem esse evento, a mesma notificação permanece visível e orienta a instalação pelo menu do navegador. No iOS, a instalação pelo navegador segue o fluxo de “Adicionar à Tela de Início” do Safari/Chrome.
+O projeto possui manifesto, ícones e `display: standalone` para permitir instalação pelo fluxo nativo do navegador quando o usuário escolher essa opção. **Nenhum painel ou aviso de instalação é exibido dentro do jogo.** O jogo foi configurado para **orientação horizontal/deitada** no PWA, Android e iOS; se o aparelho estiver em pé, aparece uma instrução para girá-lo. No iOS, a instalação pelo navegador segue o fluxo de “Adicionar à Tela de Início” do Safari/Chrome.
 
 ## Rodar localmente
 
@@ -64,6 +64,10 @@ npm run cap:open:ios
 
 No Xcode, selecione o time de desenvolvimento, confirme o Bundle Identifier `com.klipzastudio.sideofdeath`, configure ícones e certificados e então archive para o App Store Connect. O arquivo `capacitor.config.json` já desativa rolagem e mantém o fundo preto; assinatura, provisioning profile e submissão continuam dependentes da conta Apple e do Xcode.
 
+## Atualização por capítulos
+
+Edite `chapters.js` para trocar textos, cenas, vozes, cenários, variantes de NPC e o número de ondas. O Capítulo 1 está configurado com 50 ondas; ao concluir a última, o jogo exibe `PRÓXIMO CAPÍTULO` e carrega o cenário definido no próximo objeto de `SOD_CONTENT.chapters`. Depois de qualquer alteração, execute `npm run build` e, para pacotes nativos, `npx cap sync`.
+
 ## Créditos da música
 
 A faixa local `assets/metalmania.mp3` é “Metalmania”, de Kevin MacLeod (incompetech.com), licenciada sob Creative Commons Attribution 4.0. O crédito deve permanecer na descrição da loja, na página de créditos ou em um arquivo de avisos distribuído com o aplicativo:
@@ -88,4 +92,4 @@ A configuração deixa o projeto pronto para ser aberto e compilado nas ferramen
 
 ## Verificação da correção horizontal e do áudio
 
-A correção publicada no commit `2dcd70b` foi validada no domínio Vercel. A deployment correspondente concluiu com sucesso, o aviso `INSTALAR SIDE OF DEATH` aparece no carregamento e o menu original permanece presente. O PWA e os projetos nativos declaram orientação horizontal; a reprodução do MP3 local foi validada em navegador após o primeiro gesto.
+A versão v2 foi validada localmente em landscape. O menu original permanece presente, a introdução usa movimento, partículas, oito falas em português e ambiência de cemitério, e o canvas mantém proporção 16:9 com tiles de cenário. O PWA e os projetos nativos declaram orientação horizontal; a reprodução dos áudios locais é desbloqueada após o primeiro gesto.

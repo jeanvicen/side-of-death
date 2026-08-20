@@ -14,3 +14,9 @@ O teste de K mostrou a animação de ataque da foice, dano visível na alma e pa
 ## Verificação pública do commit a8990fb
 
 O GitHub registrou o deployment de produção do commit `a8990fb` como concluído com sucesso. Após um cache-busting no domínio público, PLAY abriu a cinematics nova com plano largo do cemitério, lua carmesim, letterbox, legenda em duas linhas e botão PULAR INTRO. O domínio público não apresentou mais o fluxo EM BREVE como destino do botão; o texto antigo permanece apenas no markup oculto do modal preservado do menu.
+
+## Expansão v2 local — 20/08/2026
+
+O menu original continuou visualmente preservado. A nova cinematics mostrou movimento de câmera com zoom/pan, letterbox, atmosfera, partículas e planos adicionais do portal e do portão. A voz regenerada foi carregada a partir de oito clipes em português brasileiro, com o texto de atuação separado do texto falado. O cenário da fase passou a ser repetido em tiles 16:9, evitando o estiramento horizontal da versão anterior.
+
+A primeira onda exibiu a Morte e duas almas com o HUD de vitalidade, objetivo e controles. A tecla D moveu o personagem; K acionou a foice, produziu partículas de impacto e avançou a eliminação da alma. A progressão agora está configurada para 50 ondas e libera `PRÓXIMO CAPÍTULO` ao final. O botão MENU continua visível e separado do controle de avanço.

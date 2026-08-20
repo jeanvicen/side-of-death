@@ -11,7 +11,8 @@ await mkdir(out, { recursive: true });
 const files = [
   'index.html',
   'manifest.webmanifest',
-  'sw.js'
+  'sw.js',
+  'chapters.js'
 ];
 const directories = [
   'assets',

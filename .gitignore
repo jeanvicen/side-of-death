@@ -11,4 +11,5 @@ ios/App/build/
 *.keystore
 *.jks
 *.p12
+side-of-death-*.aab
 android/keystore.properties
