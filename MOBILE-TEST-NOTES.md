@@ -20,3 +20,7 @@ O GitHub registrou o deployment de produção do commit `a8990fb` como concluíd
 O menu original continuou visualmente preservado. A nova cinematics mostrou movimento de câmera com zoom/pan, letterbox, atmosfera, partículas e planos adicionais do portal e do portão. A voz regenerada foi carregada a partir de oito clipes em português brasileiro, com o texto de atuação separado do texto falado. O cenário da fase passou a ser repetido em tiles 16:9, evitando o estiramento horizontal da versão anterior.
 
 A primeira onda exibiu a Morte e duas almas com o HUD de vitalidade, objetivo e controles. A tecla D moveu o personagem; K acionou a foice, produziu partículas de impacto e avançou a eliminação da alma. A progressão agora está configurada para 50 ondas e libera `PRÓXIMO CAPÍTULO` ao final. O botão MENU continua visível e separado do controle de avanço.
+
+## Verificação pública v2 — commit 0f4fd91
+
+O deployment de produção do commit `0f4fd91` foi concluído com sucesso. No domínio público, o menu original apareceu sem alteração e PLAY abriu a cinematics atualizada com almas em movimento visual, pan/zoom, letterbox, legenda em duas linhas e `PULAR INTRO`. Os novos assets chegaram ao deploy e o arquivo central `chapters.js` está sendo servido pela mesma origem.
