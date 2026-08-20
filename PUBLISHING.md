@@ -75,3 +75,8 @@ A configuração deixa o projeto pronto para ser aberto e compilado nas ferramen
 [4]: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Trigger_install_prompt "MDN — Trigger installation from your PWA"
 [5]: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700023&Search=Search "incompetech — Metalmania"
 [6]: https://creativecommons.org/licenses/by/4.0/ "Creative Commons — Attribution 4.0 International"
+
+
+## Verificação da correção horizontal e do áudio
+
+A correção publicada no commit `2dcd70b` foi validada no domínio Vercel. A deployment correspondente concluiu com sucesso, o aviso `INSTALAR SIDE OF DEATH` aparece no carregamento e o menu original permanece presente. O PWA e os projetos nativos declaram orientação horizontal; a reprodução do MP3 local foi validada em navegador após o primeiro gesto.
